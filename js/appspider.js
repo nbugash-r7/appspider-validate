@@ -41,13 +41,13 @@ var AppSpider = {
         }
     }
 };
-var appspidervalidateapp = angular.module('appspidervalidateapp', []);
-appspidervalidateapp.controller('AttackController', function($scope){
+var AppspiderValidateApp = angular.module('AppspiderValidateApp', []);
+AppspiderValidateApp.controller('AttackController', function($scope){
     AppSpider.attacks.loadAll(function(results){
         $scope.attacks = results;
     });
 });
-appspidervalidateapp.controller('PanelController', function($scope){
+AppspiderValidateApp.controller('PanelController', function($scope){
     $scope.tab = 1;
     $scope.selectTab = function(setTab){
         $scope.tab = setTab;
