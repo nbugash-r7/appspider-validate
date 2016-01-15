@@ -63,7 +63,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                         tabId: tab.id,
                         type: 'popup',
                         focused: true,
-                        width: 820,
+                        width: 940,
                         height: 745
                         // incognito, top, left, ...
                     });

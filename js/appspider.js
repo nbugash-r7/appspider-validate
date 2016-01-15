@@ -1,7 +1,4 @@
 /**
- * Created by nbugash on 12/01/16.
- */
-/**
  * Created by nbugash on 14/01/16.
  */
 var AppSpider = {
