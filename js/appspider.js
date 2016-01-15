@@ -38,22 +38,9 @@ var AppSpider = {
         }
     }
 };
-var AppspiderValidateApp = angular.module('AppspiderValidateApp', []);
-AppspiderValidateApp.controller('AttackController', function($scope){
-    AppSpider.attacks.loadAll(function(results){
-        $scope.attacks = results;
-    });
-});
-AppspiderValidateApp.controller('PanelController', function($scope){
-    $scope.tab = 1;
-    $scope.selectTab = function(setTab){
-        $scope.tab = setTab;
-    };
-    $scope.isSelected = function(checkTab){
-        return $scope.tab === checkTab;
-    };
-});
 
 /* EVENT HANDLERS */
-
-
+$(document).ready( function(e){
+    $("#appspider-logo").trigger('click');
+    $("#step-1").trigger('click');
+});
