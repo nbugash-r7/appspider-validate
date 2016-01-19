@@ -15,6 +15,26 @@ AppSpiderValidateApp.controller('AttackController', function ($scope) {
         console.log("Running function getAttacks()");
         $scope.attacks = attacks;
     };
+    $scope.prettifyAttack = function(headers) {
+        var attack_str = headers['REQUEST'] + "\r\n";
+        for (var header in headers) {
+            switch(header) {
+                case "REQUEST":
+                    break;
+                case "Cookie":
+                    var cookie_str = "";
+                    for(var key in headers[header]) {
+                        cookie_str += key + "=" + headers[header][key] + "; "
+                    }
+                    attack_str += header +": " + cookie_str;
+                    break;
+                default:
+                    attack_str += header + ": " + headers[header] + "\r\n";
+                    break;
+            }
+        }
+        return attack_str;
+    }
 });
 AppSpiderValidateApp.controller('PanelController', function () {
     var panel = this;

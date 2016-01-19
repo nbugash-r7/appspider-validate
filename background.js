@@ -40,7 +40,27 @@ var httpFunctions = {
             if (headerArray[i].toUpperCase().match(/GET|POST|PUT|DELETE/)) {
                 header['REQUEST'] = headerArray[i].trim();
             } else if (headerArray[i].indexOf(":") > -1) {
-                header[headerArray[i].split(":")[0]] = headerArray[i].split(":")[1].trim();
+                var a = headerArray[i].split(":");
+                var header_name = a[0].trim();
+                switch(header_name) {
+                    case "Referer":
+                        header[header_name] = a.slice(1).join(":").trim();
+                        break;
+                    case "Cookie":
+                        var cookiearray = a[a.length - 1].split(';');
+                        var cookieValues = {};
+                        for (var x = 0; x < cookiearray.length; x++) {
+                            if (cookiearray[x].indexOf("=") > -1){
+                                var array = cookiearray[x].split("=");
+                                cookieValues[array[0].trim()] = array[array.length -1].trim();
+                            }
+                        }
+                        header[header_name] = cookieValues;
+                        break;
+                    default:
+                        header[header_name] = a[a.length - 1].trim();
+                        break;
+                }
             }
         }
         return header;
@@ -112,37 +132,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         }
     } else {
         console.log("Background.js: Can not handle request from other scripts!!")
-    }
-});
-
-chrome.runtime.onConnect.addListener(function (channel) {
-    var name = channel.name;
-    try {
-        switch (name) {
-            case "app.js":
-                channel.onMessage.addListener(function (message) {
-                    switch (message.type) {
-                        case "get_attacks":
-                            chrome.storage.local.get(null, function (results) {
-                                channel.postMessage({
-                                    type: "all_attacks",
-                                    from: "background.js",
-                                    data: {
-                                        attacks: results
-                                    }
-                                });
-                            });
-                            break;
-                        default:
-                            break;
-                    }
-                });
-                break;
-            default:
-                break;
-        }
-    } catch (err) {
-        console.log(err.message);
     }
 });
 

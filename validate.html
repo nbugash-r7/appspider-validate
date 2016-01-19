@@ -54,7 +54,7 @@
                                 <label for="attack-request-header-{{attkey}}">Attack request</label>
                                 <textarea name="attack-request-header-input" id="attack-request-header-{{attkey}}"
                                           cols="30"
-                                          rows="10" class="form-control attack-request-header">{{attvalue['header']}}</textarea>
+                                          rows="10" class="form-control attack-request-header">{{prettifyAttack(attvalue['header'])}}</textarea>
                                 <textarea name="attack-request-payload-input" id="attack-request-payload-{{attkey}}"
                                           cols="15"
                                           rows="10" class="form-control attack-request-payload">{{attvalue['payload']}}</textarea>
