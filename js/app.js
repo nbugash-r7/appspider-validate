@@ -1,51 +1,24 @@
 /**
  * Created by nbugash on 15/01/16.
  */
+
 var AppSpiderValidateApp = angular.module('AppSpiderValidateApp', []);
-AppSpiderValidateApp.controller('AttackController', function () {
-    var appspider = this;
-
-    //AppSpider.attacks.loadAll(function(results) {
-    //   appspider.attacks = results;
-    //});
-
-    //angular.element(document).ready(function(){
-    //    AppSpider.attacks.loadAll(function(results) {
-    //        appspider.attacks = results;
-    //    });
-    //});
-    //appspider.attacks = appspider.getAttacks();
-    //appspider.attacks = [
-    //    {
-    //        1:{
-    //            header:{
-    //                header1:'Header 1-1',
-    //                header2:'Header 2-1',
-    //            },
-    //            payload: 'Payload for attack 1'
-    //        }
-    //    },
-    //    {
-    //        2:{
-    //            header:{
-    //                header1:'Header 1-2',
-    //                header2:'Header 2-2',
-    //            },
-    //            payload: 'Payload for attack 2'
-    //        }
-    //    }
-    //];
-    AppSpider.attacks.loadAll(function (results) {
-        appspider.attacks = results;
+AppSpiderValidateApp.controller('AttackController', function ($scope) {
+    chrome.storage.local.get(null, function(results){
+        console.log("Running function chrome.storage");
+        $scope.$apply(function(){
+            $scope.getAttacks(results);
+            console.log("Retrieve attacks from local storage.");
+        });
     });
-
-    appspider.getAttacks = function() {
-        return appspider.attacks;
+    $scope.getAttacks = function(attacks) {
+        console.log("Running function getAttacks()");
+        $scope.attacks = attacks;
     };
 });
 AppSpiderValidateApp.controller('PanelController', function () {
     var panel = this;
-    panel.tab = 1;
+    panel.tab = "1";
     panel.selectTab = function (setTab) {
         panel.tab = setTab;
     };
@@ -53,4 +26,3 @@ AppSpiderValidateApp.controller('PanelController', function () {
         return panel.tab === checkTab;
     };
 });
-

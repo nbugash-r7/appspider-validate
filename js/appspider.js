@@ -38,9 +38,3 @@ var AppSpider = {
         }
     }
 };
-
-/* EVENT HANDLERS */
-$(document).ready( function(e){
-    $("#appspider-logo").trigger('click');
-    $("#step-1").trigger('click');
-});

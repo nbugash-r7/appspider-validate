@@ -7,15 +7,15 @@ var encodedHTTPRequest;
 
 /* Helper functions */
 var httpFunctions = {
-    decodeRequest: function(encodedRequest) {
+    decodeRequest: function (encodedRequest) {
         return window.atob(encodedRequest);
     },
 
     /* Split the decoded request to multiple requests*/
-    splitRequests: function(decodedRequests) {
+    splitRequests: function (decodedRequests) {
         var requests = decodedRequests.split(/(#H#G#F#E#D#C#B#A#)/);
-        for(var i = 0; i < requests.length; i++) {
-            if (requests[i].match(/(#H#G#F#E#D#C#B#A#)/)){
+        for (var i = 0; i < requests.length; i++) {
+            if (requests[i].match(/(#H#G#F#E#D#C#B#A#)/)) {
                 delete requests[i];
             }
         }
@@ -23,7 +23,7 @@ var httpFunctions = {
     },
 
     /* Split the request to header, payload, and description */
-    splitRequest: function(request){
+    splitRequest: function (request) {
         var array = request.split(/(A#B#C#D#E#F#G#H#)/);
         var header_payload = array[0];
         return {
@@ -33,13 +33,13 @@ var httpFunctions = {
         }
     },
 
-    convertHeaderStringToJSON: function(headerString) {
+    convertHeaderStringToJSON: function (headerString) {
         var headerArray = headerString.split("\r\n");
         var header = {};
         for (var i = 0; i < headerArray.length; i++) {
             if (headerArray[i].toUpperCase().match(/GET|POST|PUT|DELETE/)) {
                 header['REQUEST'] = headerArray[i].trim();
-            } else if (headerArray[i].indexOf(":") > -1 ) {
+            } else if (headerArray[i].indexOf(":") > -1) {
                 header[headerArray[i].split(":")[0]] = headerArray[i].split(":")[1].trim();
             }
         }
@@ -50,7 +50,7 @@ var httpFunctions = {
 
 /* Coming from the Content.js */
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    if (request.from === "content.js"){
+    if (request.from === "content.js") {
         var type = request.type;
         switch (type) {
             case "open_validate_page":
@@ -77,11 +77,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                 break;
             case "parse_and_save_http_request":
                 /*
-                * (1) Decode request to header, payload, and description
-                * (2) Split request to headers and payload
-                * (3) Convert header to json object
-                * (4) Save JSON header, Payload, and Description
-                * */
+                 * (1) Decode request to header, payload, and description
+                 * (2) Split request to headers and payload
+                 * (3) Convert header to json object
+                 * (4) Save JSON header, Payload, and Description
+                 * */
 
                 /* (1) Decode request */
                 var decodedRequests = httpFunctions.decodeRequest(encodedHTTPRequest);
@@ -91,15 +91,15 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                 var step = 1;
                 for (var i = 0; i < requests.length; i++) {
                     /* For each defined element */
-                    if (requests[i]){
+                    if (requests[i]) {
                         var request = httpFunctions.splitRequest(requests[i]);
                         /* (3) Convert header to JSON Object */
                         request.header = httpFunctions.convertHeaderStringToJSON(request.header);
                         /* (4) Save request as with step being the key */
                         var attack_obj = {};
                         attack_obj[step] = request;
-                        chrome.storage.local.set(attack_obj, function(){
-                            console.log("Request save to key: '"+ step +"'");
+                        chrome.storage.local.set(attack_obj, function () {
+                            console.log("Request save to key: '" + step + "'");
                         });
                         step++;
                     }
@@ -111,7 +111,38 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                 break;
         }
     } else {
-        console.log("Can not handle request from other scripts!!")
+        console.log("Background.js: Can not handle request from other scripts!!")
+    }
+});
+
+chrome.runtime.onConnect.addListener(function (channel) {
+    var name = channel.name;
+    try {
+        switch (name) {
+            case "app.js":
+                channel.onMessage.addListener(function (message) {
+                    switch (message.type) {
+                        case "get_attacks":
+                            chrome.storage.local.get(null, function (results) {
+                                channel.postMessage({
+                                    type: "all_attacks",
+                                    from: "background.js",
+                                    data: {
+                                        attacks: results
+                                    }
+                                });
+                            });
+                            break;
+                        default:
+                            break;
+                    }
+                });
+                break;
+            default:
+                break;
+        }
+    } catch (err) {
+        console.log(err.message);
     }
 });
 

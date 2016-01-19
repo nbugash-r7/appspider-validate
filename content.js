@@ -1,9 +1,6 @@
 /**
  * Created by nbugash on 12/01/16.
  */
-/**
- * Created by nbugash on 10/11/15.
- */
 /* Hard coding the encoded HTTP request for now */
 
 /* LIST of XPath */
