@@ -34,7 +34,7 @@ AppSpiderValidateApp.controller('AttackController', function ($scope) {
         return attack_str;
     }
 });
-AppSpiderValidateApp.controller('PanelController', function ($scope) {
+AppSpiderValidateApp.controller('PanelController', function () {
     var panel = this;
     panel.tab = "1";
     panel.selectTab = function (setTab) {
