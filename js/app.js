@@ -5,14 +5,11 @@
 var AppSpiderValidateApp = angular.module('AppSpiderValidateApp', []);
 AppSpiderValidateApp.controller('AttackController', function ($scope) {
     chrome.storage.local.get(null, function(results){
-        console.log("Running function chrome.storage");
         $scope.$apply(function(){
             $scope.getAttacks(results);
-            console.log("Retrieve attacks from local storage.");
         });
     });
     $scope.getAttacks = function(attacks) {
-        console.log("Running function getAttacks()");
         $scope.attacks = attacks;
     };
     $scope.prettifyAttack = function(headers) {
