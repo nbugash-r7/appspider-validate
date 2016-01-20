@@ -17,10 +17,12 @@ var AppSpider = {
                 callback(result[id]);
             });
         },
-        retrieveAll: function (callback) {
+        retrieveAll: function ($scope, callback) {
             chrome.storage.local.get(null, function(results){
                 console.log("All attacks were retrieved!!");
-                callback(results);
+                $scope.$apply(function(){
+                    callback(results);
+                });
             });
         }
     },
@@ -30,11 +32,59 @@ var AppSpider = {
         },
         load: function(attack_id, callback){
             AppSpider.chrome.retrieve(attack_id,callback);
+        },
+        update: function(attack_id, attack_key, attack_value) {
+            AppSpider.chrome.retrieve(attack_id, function(attack) {
+                attack[attack_key] = attack_value;
+                AppSpider.attack.save(attack_id,attack);
+            });
         }
     },
     attacks: {
-        loadAll: function (callback) {
-            AppSpider.chrome.retrieveAll(callback);
+        getAllAttacks: function ($scope, callback) {
+            AppSpider.chrome.retrieveAll($scope, callback);
+        }
+    },
+    request: {
+        send: function(protocol, attack_id, callback) {
+            /* Loading attack... */
+            AppSpider.attack.load(attack_id, function(attack) {
+                var data = {};
+
+                /* http_request_type: GET, POST, DELETE, PUT */
+                var http_request = attack.header.REQUEST.split(' ');
+                data.http_request_type = http_request[0].trim();
+                data.url = protocol.toLowerCase() + "://" + attack.header.Host + http_request[1];
+                data.http_version = http_request[2];
+
+                /* Setting up the attack */
+                delete attack.header.REQUEST;
+                data.headers = attack.header;
+                if (attack.payload) {
+                    data.payload = attack.payload;
+                }
+
+                /* Sending the message...*/
+                var channel = chrome.runtime.connect({name: "appspider.js"});
+                channel.postMessage({
+                    type: "send_request",
+                    data: data
+                });
+
+                /* Wait for asynchronous callback */
+                channel.onMessage.addListener(function(message, sender) {
+                    switch(message.type) {
+                        case "http_response":
+                            console.log("appspider.js: Receive http response!!");
+                            callback(message.data);
+                            break;
+                        default:
+                            console.log("appspider.js: Unable to handle message from " + message.from);
+                            break;
+                    }
+                });
+
+            });
         }
     }
 };
