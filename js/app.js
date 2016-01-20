@@ -4,15 +4,16 @@
 
 var AppSpiderValidateApp = angular.module('AppSpiderValidateApp', []);
 AppSpiderValidateApp.controller('AttackController', function ($scope) {
+    var appspider = this;
     chrome.storage.local.get(null, function(results){
         $scope.$apply(function(){
-            $scope.getAttacks(results);
+            appspider.getAttacks(results);
         });
     });
-    $scope.getAttacks = function(attacks) {
-        $scope.attacks = attacks;
+    appspider.getAttacks = function(attacks) {
+        appspider.attacks = attacks;
     };
-    $scope.prettifyAttack = function(headers) {
+    appspider.prettifyAttack = function(headers) {
         var attack_str = headers['REQUEST'] + "\r\n";
         for (var header in headers) {
             switch(header) {
@@ -23,7 +24,7 @@ AppSpiderValidateApp.controller('AttackController', function ($scope) {
                     for(var key in headers[header]) {
                         cookie_str += key + "=" + headers[header][key] + "; "
                     }
-                    attack_str += header +": " + cookie_str;
+                    attack_str += header +": " + cookie_str + "\r\n";
                     break;
                 default:
                     attack_str += header + ": " + headers[header] + "\r\n";
@@ -33,7 +34,7 @@ AppSpiderValidateApp.controller('AttackController', function ($scope) {
         return attack_str;
     }
 });
-AppSpiderValidateApp.controller('PanelController', function () {
+AppSpiderValidateApp.controller('PanelController', function ($scope) {
     var panel = this;
     panel.tab = "1";
     panel.selectTab = function (setTab) {
