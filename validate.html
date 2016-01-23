@@ -25,7 +25,7 @@
         </div>
         <nav class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <li ng-class="{ active: panel.isSelected(attack_id)}" ng-repeat="(attack_id,attack_value) in appspider.attacks">
+                <li ng-class="{ active: panel.isSelected(attack_id)}" ng-repeat="(attack_id,attack) in appspider.attacks">
                     <a id="step-{{attack_id}}" href="#" ng-click="panel.selectTab(attack_id)">Step {{attack_id}}</a>
                 </li>
             </ul>
@@ -47,17 +47,17 @@
                 <div class="page-header">
                     <h3>AppSpider Validate</h3>
                 </div>
-                <div ng-repeat="(attack_id,attack_value) in appspider.attacks">
-                    <section>
+                <div ng-repeat="(attack_id,attack) in appspider.attacks">
+                    <section ng-model="attack">
                         <div class="panel" ng-show="panel.isSelected(attack_id)">
                             <div class="form-group">
                                 <label for="attack-request-header-{{attack_id}}">Attack request</label>
                                 <textarea name="attack-request-header-input" id="attack-request-header-{{attack_id}}"
-                                          cols="30"
-                                          rows="10" class="form-control attack-request-header">{{appspider.prettifyAttack(attack_value['header'])}}</textarea>
+                                          cols="30" rows="10" class="form-control attack-request-header"
+                                          ng-model="attack.header" prettifyheader></textarea>
                                 <textarea name="attack-request-payload-input" id="attack-request-payload-{{attack_id}}"
-                                          cols="15"
-                                          rows="10" class="form-control attack-request-payload">{{attack_value['payload']}}</textarea>
+                                          cols="15" rows="10" class="form-control attack-request-payload" ng-model="attack.payload"
+                                          ng-change="appspider.updateAttack(attack_id, 'payload', attack.payload)"></textarea>
                                 <div class="container-fluid appspider-btn">
                                     <div class="row" ng-controller="ButtonController as button">
                                         <!-- Single button -->
@@ -116,11 +116,11 @@
                                 </div>
                                 <label for="attack-response-header-{{attack_id}}">Attack response</label>
                                 <textarea name="attack-response-header-input" id="attack-response-header-{{attack_id}}"
-                                          cols="30"
-                                          rows="10" class="form-control attack-response-header"></textarea>
+                                          cols="30" rows="10" class="form-control attack-response-header"
+                                          ng-model="attack.response_header"></textarea>
                                 <textarea name="attack-response-content-input" id="attack-response-content-{{attack_id}}"
-                                          cols="30"
-                                          rows="10" class="form-control attack-response-content"></textarea>
+                                          cols="30" rows="10" class="form-control attack-response-content"
+                                          ng-model="attack.response_content"></textarea>
                                 <div class="container-fluid">
                                     <div class="row">
                                         <div class="btn-group" role="group" aria-label="...">

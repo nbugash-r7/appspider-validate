@@ -27,7 +27,7 @@ var restrictedChromeHeaders = [
     "VIA"
 ];
 var token = "appspider-";
-var header;
+var global_headers;
 /* Helper functions */
 var httpFunctions = {
     decodeRequest: function (encodedRequest) {
@@ -122,7 +122,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                 case "parse_and_save_http_request":
                     /*
                      * (1) Decode request to header, payload, and description
-                     * (2) Split request to headers and payload
+                     * (2) Split request to global_headers and payload
                      * (3) Convert header to json object
                      * (4) Save JSON header, Payload, and Description
                      * */
@@ -131,7 +131,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                     var decodedRequests = httpFunctions.decodeRequest(encodedHTTPRequest);
                     var requests = httpFunctions.splitRequests(decodedRequests);
 
-                    /* (2) For each requests, split into headers and payload */
+                    /* (2) For each requests, split into global_headers and payload */
                     var step = 1;
                     for (var i = 0; i < requests.length; i++) {
                         /* For each defined element */
@@ -172,7 +172,7 @@ chrome.runtime.onConnect.addListener(function(channel) {
                             /* TODO: return attack_response.header & attack_response.content */
                             var httpRequest = message.data;
                             var xhr = new XMLHttpRequest();
-                            headers = {};
+                            global_headers = {};
                             xhr.onreadystatechange = function () {
                                 if (xhr.readyState === 4 && xhr.status === 200) {
                                     channel.postMessage({
@@ -213,17 +213,19 @@ chrome.runtime.onConnect.addListener(function(channel) {
                                             for (var cookie in httpRequest.headers.Cookie) {
                                                 cookievalue += cookie + "=" + httpRequest.headers.Cookie[cookie] + ";"
                                             }
-                                            httpRequest.headers[header] = cookievalue;
-                                            xhr.setRequestHeader(token + header, cookievalue);
+                                            global_headers[header] = cookievalue;
+                                            //httpRequest.global_headers[header] = cookievalue;
+                                            //xhr.setRequestHeader(token + header, cookievalue);
                                             break;
                                         default:
-                                            xhr.setRequestHeader(token + header, httpRequest.headers[header]);
+                                            global_headers[header] = httpRequest.headers[header];
+                                            //xhr.setRequestHeader(token + header, httpRequest.global_headers[header]);
                                             break;
                                     }
                                 } else {
                                     xhr.setRequestHeader(header, httpRequest.headers[header]);
                                 }
-                                headers[header] = httpRequest.headers[header];
+                                //global_headers[header] = httpRequest.global_headers[header];
                             }
                             switch (httpRequest.http_request_type.toUpperCase()) {
                                 case 'GET':
@@ -251,28 +253,25 @@ chrome.runtime.onConnect.addListener(function(channel) {
 
 chrome.webRequest.onBeforeSendHeaders.addListener(
     function (details) {
-        for (var i = 0; i < details.requestHeaders.length - 1; ++i) {
-            var name = details.requestHeaders[i].name;
-            if (name.match(/appspider-/i)) {
-                name = name.slice(token.length);
-                var index = objectExist(name, details.requestHeaders);
-                if ( index > -1 ) {
-                    details.requestHeaders.splice(index, 1);
+        var headers = details.requestHeaders;
+        for (var header in global_headers ) {
+            var found = false;
+            for (var index = 0; index < headers.length && !found; index++) {
+                if (headers[index].name == header) {
+                    headers[index].value = global_headers[header];
+                    found = true;
                 }
-                details.requestHeaders[i].name = name;
-                details.requestHeaders[i].value = headers[name];
+            }
+            if (!found) {
+                headers.push({
+                    name: header,
+                    value: global_headers[header]
+                });
             }
         }
-        return {requestHeaders: details.requestHeaders};
+        /* RESET global headers */
+        global_headers = {};
+        return {requestHeaders: headers};
     },
     {urls: ["<all_urls>"]},
     ["blocking", "requestHeaders"]);
-
-function objectExist(name, array) {
-    for (var i = 0; i < array.length - 1; i++ ) {
-        if(array[i].name === name) {
-            return i;
-        }
-    }
-    return -1;
-}
