@@ -88,3 +88,17 @@ var AppSpider = {
         }
     }
 };
+
+chrome.storage.onChanged.addListener(function(attacks, namespace){
+    for (var attack_id in attacks) {
+        var attack_storage = attacks[attack_id];
+        console.log('Storage key "%s" in namespace "%s" changed. ' +
+            'Old value was "%s", new value is "%s".',
+            attack_id,
+            namespace,
+            attack_storage.oldValue,
+            attack_storage.newValue);
+        $('textarea#attack-response-header-'+attack_id).val(attack_storage.newValue.response_header);
+        $('textarea#attack-response-content-'+attack_id).val(attack_storage.newValue.response_content);
+    }
+});
