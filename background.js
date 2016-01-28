@@ -61,7 +61,8 @@ var httpFunctions = {
         var header = {};
         for (var i = 0; i < headerArray.length; i++) {
             if (headerArray[i].toUpperCase().match(/GET|POST|PUT|DELETE/)) {
-                header['REQUEST'] = headerArray[i].trim();
+                var request = headerArray[i].split(" ");
+                header['REQUEST'] = request;
             } else if (headerArray[i].indexOf(":") > -1) {
                 var a = headerArray[i].split(":");
                 var header_name = a[0].trim();
@@ -242,6 +243,20 @@ chrome.runtime.onConnect.addListener(function(channel) {
                             break;
                     }
                     break;
+                case "app.js":
+                    switch(message.type) {
+                        case "savehttpHeaders":
+                            global_headers = message.data.headers;
+                            channel.postMessage({
+                                from: "background.js",
+                                type: "httpHeaderSaved"
+                            });
+                            break;
+                        default:
+                            console.error("Background.js: Unable to handle " + message.type);
+                            break;
+                    }
+
                 default:
                     break;
             }
@@ -253,24 +268,60 @@ chrome.runtime.onConnect.addListener(function(channel) {
 
 chrome.webRequest.onBeforeSendHeaders.addListener(
     function (details) {
-        var headers = details.requestHeaders;
-        for (var header in global_headers ) {
-            var found = false;
-            for (var index = 0; index < headers.length && !found; index++) {
-                if (headers[index].name == header) {
-                    headers[index].value = global_headers[header];
-                    found = true;
+        try {
+            if (details.url.match(new RegExp(global_headers.Host)) ||
+                Object.keys(global_headers).length > 0) {
+                var headers = details.requestHeaders;
+                var cookievalue = "";
+
+
+                /* Sanitize Global Headers */
+                delete global_headers.REQUEST;
+                for (var cookie in global_headers.Cookie) {
+                    cookievalue += cookie + "=" + global_headers.Cookie[cookie] + ";"
+                }
+                global_headers.Cookie = cookievalue;
+                for (var header in global_headers) {
+                    var found = false;
+                    for(var index = 0; index < headers.length && !found; index++) {
+                        if (headers[index].name.toLowerCase() === header.toLowerCase()) {
+                            console.log("Found a match!!");
+                            headers[index].value = global_headers[header];
+                            delete global_headers[header];
+                            found = true;
+                        }
+                    }
+                    if (!found) {
+                        headers.push({
+                            name: header,
+                            value: global_headers[header]
+                        });
+                        delete global_headers[header];
+                    }
                 }
             }
-            if (!found) {
-                headers.push({
-                    name: header,
-                    value: global_headers[header]
-                });
-            }
+        } catch(err) {
+            console.log(err);
         }
-        /* RESET global headers */
-        global_headers = {};
+
+        //var headers = details.requestHeaders;
+        ////for (var header in global_headers ) {
+        ////    var found = false;
+        ////    for (var index = 0; index < headers.length && !found; index++) {
+        ////        if (headers[index].name == header) {
+        ////            headers[index].value = global_headers[header];
+        ////            found = true;
+        ////        }
+        ////    }
+        ////    if (!found) {
+        ////        headers.push({
+        ////            name: header,
+        ////            value: global_headers[header]
+        ////        });
+        ////    }
+        ////}
+        ///* RESET global headers */
+        //global_headers = {};
         return {requestHeaders: headers};
     },
     {urls: ["<all_urls>"]},
