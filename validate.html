@@ -51,10 +51,10 @@
                     <section ng-model="attack">
                         <div class="panel" ng-show="panel.isSelected(attack_id)">
                             <div class="form-group">
-                                <label for="attack-request-header-{{attack_id}}">Attack request</label>
-                                <textarea name="attack-request-header-input" id="attack-request-header-{{attack_id}}"
-                                          cols="30" rows="10" class="form-control attack-request-header"
-                                          ng-model="attack.header" prettifyheader></textarea>
+                                <label for="attack-request-headers-{{attack_id}}">Attack request</label>
+                                <textarea name="attack-request-header-input" id="attack-request-headers-{{attack_id}}"
+                                          cols="30" rows="10" class="form-control attack-request-headers"
+                                          ng-model="attack.headers" prettifyheader></textarea>
                                 <textarea name="attack-request-payload-input" id="attack-request-payload-{{attack_id}}"
                                           cols="15" rows="10" class="form-control attack-request-payload" ng-model="attack.payload"
                                           ng-change="appspider.updateAttack(attack_id, 'payload', attack.payload)"></textarea>
@@ -114,13 +114,13 @@
 
                                     </div>
                                 </div>
-                                <label for="attack-response-header-{{attack_id}}">Attack response</label>
-                                <textarea name="attack-response-header-input" id="attack-response-header-{{attack_id}}"
-                                          cols="30" rows="10" class="form-control attack-response-header"
-                                          ng-model="attack.response_header" prettifyheader></textarea>
+                                <label for="attack-response-headers-{{attack_id}}">Attack response</label>
+                                <textarea name="attack-response-header-input" id="attack-response-headers-{{attack_id}}"
+                                          cols="30" rows="10" class="form-control attack-response-headers" readonly
+                                          ng-model="attack.response_headers" prettifyheader></textarea>
                                 <textarea name="attack-response-content-input" id="attack-response-content-{{attack_id}}"
                                           cols="30" rows="10" class="form-control attack-response-content"
-                                          ng-model="attack.response_content"
+                                          ng-model="attack.response_content" readonly
                                           ng-change="appspider.updateAttack(attack_id, response_content, attack.response_content)"></textarea>
                                 <div class="container-fluid">
                                     <div class="row">

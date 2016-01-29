@@ -26,7 +26,6 @@ var restrictedChromeHeaders = [
     "USER-AGENT",
     "VIA"
 ];
-var token = "appspider-";
 var global_headers;
 /* Helper functions */
 var httpFunctions = {
@@ -50,7 +49,7 @@ var httpFunctions = {
         var array = request.split(/(A#B#C#D#E#F#G#H#)/);
         var header_payload = array[0];
         return {
-            header: header_payload.split('\r\n\r\n')[0].trim(),
+            headers: header_payload.split('\r\n\r\n')[0].trim(),
             payload: header_payload.split('\r\n\r\n')[1].trim(),
             description: array[2].trim()
         }
@@ -58,36 +57,40 @@ var httpFunctions = {
 
     convertHeaderStringToJSON: function (headerString) {
         var headerArray = headerString.split("\r\n");
-        var header = {};
+        var headers = {};
         for (var i = 0; i < headerArray.length; i++) {
             if (headerArray[i].toUpperCase().match(/GET|POST|PUT|DELETE/)) {
-                var request = headerArray[i].split(" ");
-                header['REQUEST'] = request;
+                var requestArray = headerArray[i].split(" ");
+                headers.REQUEST = {
+                    method: requestArray[0],
+                    uri: requestArray[1],
+                    version: requestArray[2]
+                };
             } else if (headerArray[i].indexOf(":") > -1) {
                 var a = headerArray[i].split(":");
                 var header_name = a[0].trim();
                 switch(header_name) {
                     case "Referer":
-                        header[header_name] = a.slice(1).join(":").trim();
+                        headers[header_name] = a.slice(1).join(":").trim();
                         break;
                     case "Cookie":
                         var cookiearray = a[a.length - 1].split(';');
                         var cookieValues = {};
                         for (var x = 0; x < cookiearray.length; x++) {
-                            if (cookiearray[x].indexOf("=") > -1){
+                            if (cookiearray[x].indexOf("=") > -1) {
                                 var array = cookiearray[x].split("=");
                                 cookieValues[array[0].trim()] = array[array.length -1].trim();
                             }
                         }
-                        header[header_name] = cookieValues;
+                        headers[header_name] = cookieValues;
                         break;
                     default:
-                        header[header_name] = a[a.length - 1].trim();
+                        headers[header_name] = a[a.length - 1].trim();
                         break;
                 }
             }
         }
-        return header;
+        return headers;
     }
 
 };
@@ -139,7 +142,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                         if (requests[i]) {
                             var request = httpFunctions.splitRequest(requests[i]);
                             /* (3) Convert header to JSON Object */
-                            request.header = httpFunctions.convertHeaderStringToJSON(request.header);
+                            request.headers = httpFunctions.convertHeaderStringToJSON(request.headers);
                             /* (4) Save request as with step being the key */
                             var attack_obj = {};
                             attack_obj[step] = request;
@@ -167,88 +170,12 @@ chrome.runtime.onConnect.addListener(function(channel) {
     try {
         channel.onMessage.addListener(function(message){
             switch(channel_name) {
-                case "appspider.js":
-                    switch(message.type) {
-                        case "send_request":
-                            /* TODO: return attack_response.header & attack_response.content */
-                            var httpRequest = message.data;
-                            var xhr = new XMLHttpRequest();
-                            global_headers = {};
-                            xhr.onreadystatechange = function () {
-                                if (xhr.readyState === 4 && xhr.status === 200) {
-                                    channel.postMessage({
-                                        type: 'http_response',
-                                        data: {
-                                            header: xhr.getAllResponseHeaders(),
-                                            content: xhr.responseText
-                                        }
-                                    });
-                                } else {
-                                    /* Need to better handle an invalid http request / response*/
-                                    channel.postMessage({
-                                        type: 'http_response_error',
-                                        data: {
-                                            header: 'Request error',
-                                            content: 'Unable to send attack request'
-                                        }
-                                    });
-                                }
-                            };
-                            switch (httpRequest.http_request_type.toUpperCase()) {
-                                case 'GET':
-                                    xhr.open('GET', httpRequest.url, true);
-                                    break;
-                                case 'POST':
-                                    xhr.open('POST', httpRequest.url, true);
-                                    break;
-                                default:
-                                    console.error("Background.js: Unable to handle http request type: "
-                                        + httpRequest.http_request_type );
-                                    break;
-                            }
-                            for (var header in httpRequest.headers) {
-                                if (restrictedChromeHeaders.indexOf(header.toUpperCase()) > -1) {
-                                    switch(header) {
-                                        case 'Cookie':
-                                            var cookievalue = "";
-                                            for (var cookie in httpRequest.headers.Cookie) {
-                                                cookievalue += cookie + "=" + httpRequest.headers.Cookie[cookie] + ";"
-                                            }
-                                            global_headers[header] = cookievalue;
-                                            //httpRequest.global_headers[header] = cookievalue;
-                                            //xhr.setRequestHeader(token + header, cookievalue);
-                                            break;
-                                        default:
-                                            global_headers[header] = httpRequest.headers[header];
-                                            //xhr.setRequestHeader(token + header, httpRequest.global_headers[header]);
-                                            break;
-                                    }
-                                } else {
-                                    xhr.setRequestHeader(header, httpRequest.headers[header]);
-                                }
-                                //global_headers[header] = httpRequest.global_headers[header];
-                            }
-                            switch (httpRequest.http_request_type.toUpperCase()) {
-                                case 'GET':
-                                    xhr.send();
-                                    break;
-                                case 'POST':
-                                    xhr.send(httpRequest.payload);
-                                    break;
-                            }
-                            break;
-                        default:
-                            console.error("Background.js: Unable to handle request type: "
-                                + message.type +" request from " + message.from);
-                            break;
-                    }
-                    break;
                 case "app.js":
                     switch(message.type) {
                         case "savehttpHeaders":
                             global_headers = message.data.headers;
                             channel.postMessage({
-                                from: "background.js",
+                                from: "Background.js",
                                 type: "httpHeaderSaved"
                             });
                             break;
@@ -272,15 +199,15 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
             if (details.url.match(new RegExp(global_headers.Host)) ||
                 Object.keys(global_headers).length > 0) {
                 var headers = details.requestHeaders;
-                var cookievalue = "";
+                var cookie_string = "";
 
 
                 /* Sanitize Global Headers */
                 delete global_headers.REQUEST;
                 for (var cookie in global_headers.Cookie) {
-                    cookievalue += cookie + "=" + global_headers.Cookie[cookie] + ";"
+                    cookie_string += cookie + "=" + global_headers.Cookie[cookie] + ";"
                 }
-                global_headers.Cookie = cookievalue;
+                global_headers.Cookie = cookie_string;
                 for (var header in global_headers) {
                     var found = false;
                     for(var index = 0; index < headers.length && !found; index++) {
@@ -303,25 +230,6 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
         } catch(err) {
             console.log(err);
         }
-
-        //var headers = details.requestHeaders;
-        ////for (var header in global_headers ) {
-        ////    var found = false;
-        ////    for (var index = 0; index < headers.length && !found; index++) {
-        ////        if (headers[index].name == header) {
-        ////            headers[index].value = global_headers[header];
-        ////            found = true;
-        ////        }
-        ////    }
-        ////    if (!found) {
-        ////        headers.push({
-        ////            name: header,
-        ////            value: global_headers[header]
-        ////        });
-        ////    }
-        ////}
-        ///* RESET global headers */
-        //global_headers = {};
         return {requestHeaders: headers};
     },
     {urls: ["<all_urls>"]},

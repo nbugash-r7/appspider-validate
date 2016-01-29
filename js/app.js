@@ -16,8 +16,16 @@ var Angular = {
             };
             appspider.prettifyAttack = function(headers) {
                 var attack_str = "";
-                if (headers.REQUEST) {
-                    attack_str = headers.REQUEST + "\r\n";
+                try {
+                    if (headers.REQUEST) {
+                        for (var key in headers.REQUEST) {
+                            attack_str += headers.REQUEST[key] + " "
+                        }
+                        attack_str += "\r\n";
+                    }
+                } catch (err) {
+                    console.error("App.js: Error handling headers.REQUEST");
+                    return;
                 }
                 for (var header in headers) {
                     switch(header) {
@@ -94,42 +102,41 @@ var Angular = {
                  * (3) Wait for response back from server
                  * (4) Display response to web ui
                  * */
+
+                /* Sending the attack header to Background.js
+                 * to be used by the onBeforeSendHeaders Listener
+                 */
                 AppSpider.attack.load(attack_id, function(attack){
                     var channel = chrome.runtime.connect({name: "app.js"});
                     channel.postMessage({
                         type: 'savehttpHeaders',
                         data: {
-                            headers: attack.header
+                            headers: attack.headers
                         }
                     });
+
                     channel.onMessage.addListener(function(message){
-                        if (message.type === "httpHeaderSaved") {
+                        /* Message from background.js */
+                        if (message.type === "httpHeaderSaved" && message.from === "Background.js") {
                             $http({
-                                method: attack.header.REQUEST[0],
-                                url: button.protocoltype + "://" + attack.header.Host + attack.header.REQUEST[1],
+                                method: attack.headers.REQUEST.method,
+                                url: button.protocoltype + "://" + attack.headers.Host + attack.headers.REQUEST.uri,
                                 data: attack.payload
                             }).then(function successRequest(response){
                                 console.log("Success!!");
-                                attack['response_header'] = response.headers();
+                                attack['response_headers'] = response.headers();
                                 attack['response_content'] = response.data;
                                 AppSpider.attack.save(attack_id, attack);
-                                // AppSpider.attack.update(attack_id, 'response_header', response.headers());
-                                // AppSpider.attack.update(attack_id, 'response_content', response.data);
                             }, function errorRequest(response){
-                                console.log("Error:" + response);
+                                console.error("App.js: Error - " + response);
                             });
 
                         } else {
-                            console.error("App.js: Invalid message from " + message.from)
+                            console.error("App.js: Invalid message from " + message.from +
+                                " with message type:" + message.type);
                         }
                     });
                 });
-
-                //AppSpider.request.send(button.protocoltype, attack_id, function(attack_response){
-                //    /* Populate the Attack Response and Content */
-                //    AppSpider.attack.update(attack_id, 'response_header', attack_response.header);
-                //    AppSpider.attack.update(attack_id, 'response_content', attack_response.content);
-                //});
             };
             button.compare = function(attack_id){
                 console.log("Compare button clicked attack id: " + attack_id);
@@ -171,7 +178,7 @@ chrome.storage.onChanged.addListener(function(attacks, namespace){
             namespace,
             attack_storage.oldValue,
             attack_storage.newValue);
-        $('textarea#attack-response-header-'+attack_id).val(attack_storage.newValue.response_header);
+        $('textarea#attack-response-headers-'+attack_id).val(attack_storage.newValue.response_headers);
         $('textarea#attack-response-content-'+attack_id).val(attack_storage.newValue.response_content);
     }
 });

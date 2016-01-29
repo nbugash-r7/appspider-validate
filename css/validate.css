@@ -80,14 +80,14 @@ body {
     text-align: center;
 }
 
-textarea.attack-request-header {
+textarea.attack-request-headers {
     height: 200px;
 }
 textarea.attack-request-payload {
     height: 75px;
     margin-top: 10px;
 }
-textarea.attack-response-header {
+textarea.attack-response-headers {
     height: 200px;
 }
 textarea.attack-response-content {

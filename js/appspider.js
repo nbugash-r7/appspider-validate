@@ -52,14 +52,14 @@ var AppSpider = {
                 var data = {};
 
                 /* http_request_type: GET, POST, DELETE, PUT */
-                var http_request = attack.header.REQUEST.split(' ');
+                var http_request = attack.headers.REQUEST.split(' ');
                 data.http_request_type = http_request[0].trim();
-                data.url = protocol.toLowerCase() + "://" + attack.header.Host + http_request[1];
+                data.url = protocol.toLowerCase() + "://" + attack.headers.Host + http_request[1];
                 data.http_version = http_request[2];
 
                 /* Setting up the attack */
-                delete attack.header.REQUEST;
-                data.headers = attack.header;
+                delete attack.headers.REQUEST;
+                data.headers = attack.headers;
                 if (attack.payload) {
                     data.payload = attack.payload;
                 }
@@ -98,7 +98,7 @@ chrome.storage.onChanged.addListener(function(attacks, namespace){
             namespace,
             attack_storage.oldValue,
             attack_storage.newValue);
-        $('textarea#attack-response-header-'+attack_id).val(attack_storage.newValue.response_header);
+        $('textarea#attack-response-headers-'+attack_id).val(attack_storage.newValue.response_headers);
         $('textarea#attack-response-content-'+attack_id).val(attack_storage.newValue.response_content);
     }
 });
