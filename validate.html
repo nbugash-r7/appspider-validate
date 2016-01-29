@@ -52,9 +52,14 @@
                         <div class="panel" ng-show="panel.isSelected(attack_id)">
                             <div class="form-group">
                                 <label for="attack-request-headers-{{attack_id}}">Attack request</label>
-                                <textarea name="attack-request-header-input" id="attack-request-headers-{{attack_id}}"
-                                          cols="30" rows="10" class="form-control attack-request-headers"
-                                          ng-model="attack.headers" prettifyheader></textarea>
+                                <div class="raw" ng-show="appspider.showView(">
+                                    <textarea name="attack-request-header-input" id="attack-request-headers-{{attack_id}}"
+                                              cols="30" rows="10" class="form-control attack-request-headers"
+                                              ng-model="attack.headers" prettifyheader></textarea>
+                                </div>
+                                <div class="prettify">
+
+                                </div>
                                 <textarea name="attack-request-payload-input" id="attack-request-payload-{{attack_id}}"
                                           cols="15" rows="10" class="form-control attack-request-payload" ng-model="attack.payload"
                                           ng-change="appspider.updateAttack(attack_id, 'payload', attack.payload)"></textarea>
@@ -70,9 +75,9 @@
                                             </button>
                                             <ul class="dropdown-menu">
                                                 <li><a ng-click="button.viewDropdown(attack_id, 'RAW')"
-                                                       href="#" >Raw</a></li>
+                                                       href="#">Raw</a></li>
                                                 <li><a ng-click="button.viewDropdown(attack_id, 'Prettify')"
-                                                       href="#" >Prettify</a></li>
+                                                       href="#">Prettify</a></li>
                                             </ul>
                                         </div>
                                         <label class='protocol-lbl'>Protocol:</label>

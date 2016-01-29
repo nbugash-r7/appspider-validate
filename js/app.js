@@ -65,6 +65,7 @@ var Angular = {
         PanelController: function() {
             var panel = this;
             panel.tab = "1";
+            panel.view = "RAW";
             panel.selectTab = function (setTab) {
                 panel.tab = setTab;
             };
