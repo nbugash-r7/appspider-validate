@@ -15,7 +15,10 @@ var Angular = {
                 appspider.attacks = attacks;
             };
             appspider.prettifyAttack = function(headers) {
-                var attack_str = headers.REQUEST + "\r\n";
+                var attack_str = "";
+                if (headers.REQUEST) {
+                    attack_str = headers.REQUEST + "\r\n";
+                }
                 for (var header in headers) {
                     switch(header) {
                         case "REQUEST":
@@ -107,8 +110,11 @@ var Angular = {
                                 data: attack.payload
                             }).then(function successRequest(response){
                                 console.log("Success!!");
-                                AppSpider.attack.update(attack_id, 'response_header', response.headers());
-                                AppSpider.attack.update(attack_id, 'response_content', response.data);
+                                attack['response_header'] = response.headers();
+                                attack['response_content'] = response.data;
+                                AppSpider.attack.save(attack_id, attack);
+                                // AppSpider.attack.update(attack_id, 'response_header', response.headers());
+                                // AppSpider.attack.update(attack_id, 'response_content', response.data);
                             }, function errorRequest(response){
                                 console.log("Error:" + response);
                             });
@@ -154,7 +160,6 @@ var Angular = {
 AppSpiderValidateApp.controller('AttackController', ['$scope', Angular.controller.AttackController]);
 AppSpiderValidateApp.controller('PanelController', [Angular.controller.PanelController]);
 AppSpiderValidateApp.controller('ButtonController', ['$http', Angular.controller.ButtonController]);
-AppSpiderValidateApp.controller('HTTPController', ['$http', Angular.controller.HTTPController]);
 AppSpiderValidateApp.directive('prettifyheader', [Angular.directive.prettifyheader]);
 
 chrome.storage.onChanged.addListener(function(attacks, namespace){
