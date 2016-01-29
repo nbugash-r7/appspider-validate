@@ -157,7 +157,6 @@ AppSpiderValidateApp.controller('ButtonController', ['$http', Angular.controller
 AppSpiderValidateApp.controller('HTTPController', ['$http', Angular.controller.HTTPController]);
 AppSpiderValidateApp.directive('prettifyheader', [Angular.directive.prettifyheader]);
 
-
 chrome.storage.onChanged.addListener(function(attacks, namespace){
     for (var attack_id in attacks) {
         var attack_storage = attacks[attack_id];
