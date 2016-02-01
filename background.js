@@ -27,6 +27,8 @@ var restrictedChromeHeaders = [
     "VIA"
 ];
 var global_headers;
+
+var current_step;
 /* Helper functions */
 var httpFunctions = {
     decodeRequest: function (encodedRequest) {
@@ -179,11 +181,32 @@ chrome.runtime.onConnect.addListener(function(channel) {
                                 type: "httpHeaderSaved"
                             });
                             break;
+                        case "setCurrentStep":
+                            current_step = message.data.current_step;
+                            channel.postMessage({
+                                from: "Background.js",
+                                type: "currentStep"
+                            });
+                            break;
                         default:
                             console.error("Background.js: Unable to handle " + message.type);
                             break;
                     }
-
+                case "cookieapp.js":
+                    switch(message.type) {
+                        case "getCurrentStep":
+                            channel.postMessage({
+                                from: "Background.js",
+                                type: "currentStep",
+                                data: {
+                                    current_step: current_step
+                                }
+                            });
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
                 default:
                     break;
             }

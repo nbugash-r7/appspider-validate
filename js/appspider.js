@@ -11,10 +11,12 @@ var AppSpider = {
                 return true;
             });
         },
-        retrieve: function (id, callback) {
+        retrieve: function ($scope, id, callback) {
             chrome.storage.local.get(id, function (result) {
                 console.log("Attack " + id + " loaded!!");
-                callback(result[id]);
+                $scope.$apply(function(){
+                    callback(result[id]);
+                });
             });
         },
         retrieveAll: function ($scope, callback) {
@@ -30,8 +32,8 @@ var AppSpider = {
         save: function(attack_id, attack_obj){
             return AppSpider.chrome.store(attack_id,attack_obj);
         },
-        load: function(attack_id, callback){
-            AppSpider.chrome.retrieve(attack_id,callback);
+        load: function($scope, attack_id, callback){
+            AppSpider.chrome.retrieve($scope, attack_id,callback);
         },
         update: function(attack_id, attack_key, attack_value) {
             AppSpider.chrome.retrieve(attack_id, function(attack) {

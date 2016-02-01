@@ -51,8 +51,8 @@ var Angular = {
                     AppSpider.attack.save(attack_id, attack);
                 });
             };
-            appspider.getAttack = function(attack_id) {
-                AppSpider.attack.load(attack_id, function(attack){
+            appspider.getAttack = function($scope,attack_id) {
+                AppSpider.attack.load($scope, attack_id, function(attack){
                     return attack;
                 });
             };
@@ -73,7 +73,7 @@ var Angular = {
                 return panel.tab === checkTab;
             };
         },
-        ButtonController: function($http) {
+        ButtonController: function($scope, $http) {
             var button = this;
             button.view = 'RAW';
             button.protocoltype = 'HTTP';
@@ -90,6 +90,39 @@ var Angular = {
             };
             button.editCookie = function(attack_id){
                 console.log("Edit Cookie button clicked attack id: " + attack_id);
+                var channel = chrome.runtime.connect({name: "app.js"});
+                channel.postMessage({
+                    type: 'setCurrentStep',
+                    data: {
+                        current_step: attack_id
+                    }
+                });
+                channel.onMessage.addListener(function(message){
+                    if (message.from === "Background.js" && message.type === "currentStep" ) {
+                        chrome.tabs.create({
+                            url: chrome.extension.getURL('cookiepopup.html'),
+                            active: false
+                        }, function (tab) {
+                            // After the tab has been created, open a window to inject the tab
+                            chrome.windows.create({
+                                tabId: tab.id,
+                                type: 'popup',
+                                focused: true,
+                                width: 600,
+                                height: 435
+                                // incognito, top, left, ...
+                            }, function(window){
+                                chrome.windows.update(window.id,{
+                                    focused: true
+                                });
+                            });
+                        });
+                    } else {
+                        console.error("App.js: Unable to handle message from "
+                            + message.from + " with message type: "+ message.type);
+                    }
+                });
+
             };
             button.resetRequest = function(attack_id){
                 console.log("Reset request button clicked attack id: " + attack_id);
@@ -107,7 +140,7 @@ var Angular = {
                 /* Sending the attack header to Background.js
                  * to be used by the onBeforeSendHeaders Listener
                  */
-                AppSpider.attack.load(attack_id, function(attack){
+                AppSpider.attack.load($scope, attack_id, function(attack){
                     var channel = chrome.runtime.connect({name: "app.js"});
                     channel.postMessage({
                         type: 'savehttpHeaders',
@@ -167,7 +200,7 @@ var Angular = {
 };
 AppSpiderValidateApp.controller('AttackController', ['$scope', Angular.controller.AttackController]);
 AppSpiderValidateApp.controller('PanelController', [Angular.controller.PanelController]);
-AppSpiderValidateApp.controller('ButtonController', ['$http', Angular.controller.ButtonController]);
+AppSpiderValidateApp.controller('ButtonController', ['$scope','$http', Angular.controller.ButtonController]);
 AppSpiderValidateApp.directive('prettifyheader', [Angular.directive.prettifyheader]);
 
 chrome.storage.onChanged.addListener(function(attacks, namespace){
