@@ -53,7 +53,9 @@ var httpFunctions = {
         return {
             headers: header_payload.split('\r\n\r\n')[0].trim(),
             payload: header_payload.split('\r\n\r\n')[1].trim(),
-            description: array[2].trim()
+            description: array[2].trim(),
+            response_headers: {},
+            response_content: {}
         }
     },
 
