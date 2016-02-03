@@ -1,11 +1,34 @@
 /**
  * Created by nbugash on 15/01/16.
  */
+var token = 'appspider-';
+var restrictedChromeHeaders = [
+    "ACCEPT-CHARSET",
+    "ACCEPT-ENCODING",
+    "ACCESS-CONTROL-REQUEST-HEADERS",
+    "ACCESS-CONTROL-REQUEST-METHOD",
+    "CONTENT-LENGTHNECTION",
+    "CONTENT-LENGTH",
+    "COOKIE",
+    "CONTENT-TRANSFER-ENCODING",
+    "DATE",
+    "EXPECT",
+    "HOST",
+    "KEEP-ALIVE",
+    "ORIGIN",
+    "REFERER",
+    "TE",
+    "TRAILER",
+    "TRANSFER-ENCODING",
+    "UPGRADE",
+    "USER-AGENT",
+    "VIA"
+];
 
 var AppSpiderValidateApp = angular.module('AppSpiderValidateApp', []);
 var Angular = {
     controller: {
-        AttackController: function($scope) {
+        AttackController: function($scope, $http) {
             var appspider = this;
 
             AppSpider.attacks.getAllAttacks($scope, function(results){
@@ -141,35 +164,66 @@ var Angular = {
                  * to be used by the onBeforeSendHeaders Listener
                  */
                 AppSpider.attack.load($scope, attack_id, function(attack){
-                    var channel = chrome.runtime.connect({name: "app.js"});
-                    channel.postMessage({
-                        type: 'savehttpHeaders',
-                        data: {
-                            headers: attack.headers
-                        }
-                    });
 
-                    channel.onMessage.addListener(function(message){
-                        /* Message from background.js */
-                        if (message.type === "httpHeaderSaved" && message.from === "Background.js") {
-                            $http({
-                                method: attack.headers.REQUEST.method,
-                                url: button.protocoltype + "://" + attack.headers.Host + attack.headers.REQUEST.uri,
-                                data: attack.payload
-                            }).then(function successRequest(response){
-                                console.log("Success!!");
-                                attack['response_headers'] = response.headers();
-                                attack['response_content'] = response.data;
-                                AppSpider.attack.save(attack_id, attack);
-                            }, function errorRequest(response){
-                                console.error("App.js: Error - " + response);
-                            });
-
+                    var headers = {};
+                    for (var header in attack.headers) {
+                        if(_.contains(restrictedChromeHeaders, header.toUpperCase())){
+                            if (header === "Cookie") {
+                                var cookie_str = "";
+                                for(var key in attack.headers.Cookie) {
+                                    cookie_str += key + "=" + attack.headers.Cookie[key] + "; "
+                                }
+                                headers[token+header] = cookie_str;
+                            } else {
+                                headers[token+header] = attack.headers[header];
+                            }
                         } else {
-                            console.error("App.js: Invalid message from " + message.from +
-                                " with message type:" + message.type);
+                            headers[header] = attack.headers[header];
                         }
+                    }
+
+                    $http({
+                        method: attack.headers.REQUEST.method,
+                        url: button.protocoltype + "://" + attack.headers.Host + attack.headers.REQUEST.uri,
+                        headers: headers,
+                        data: attack.payload
+                    }).then(function successRequest(response){
+                        console.log("Success!!");
+                        attack.response_headers = response.headers();
+                        attack.response_content = response.data;
+                        AppSpider.attack.save(attack_id, attack);
+                    }, function errorRequest(response){
+                        console.error("App.js: Error - " + response);
                     });
+
+                    //var channel = chrome.runtime.connect({name: "app.js"});
+                    //channel.postMessage({
+                    //    type: 'savehttpHeaders',
+                    //    data: {
+                    //        headers: attack.headers
+                    //    }
+                    //});
+                    //channel.onMessage.addListener(function(message){
+                    //    /* Message from background.js */
+                    //    if (message.type === "httpHeaderSaved" && message.from === "Background.js") {
+                    //        $http({
+                    //            method: attack.headers.REQUEST.method,
+                    //            url: button.protocoltype + "://" + attack.headers.Host + attack.headers.REQUEST.uri,
+                    //            data: attack.payload
+                    //        }).then(function successRequest(response){
+                    //            console.log("Success!!");
+                    //            attack.response_headers = response.headers();
+                    //            attack.response_content = response.data;
+                    //            AppSpider.attack.save(attack_id, attack);
+                    //        }, function errorRequest(response){
+                    //            console.error("App.js: Error - " + response);
+                    //        });
+                    //
+                    //    } else {
+                    //        console.error("App.js: Invalid message from " + message.from +
+                    //            " with message type:" + message.type);
+                    //    }
+                    //});
                 });
             };
             button.compare = function(attack_id){
@@ -198,7 +252,7 @@ var Angular = {
         }
     }
 };
-AppSpiderValidateApp.controller('AttackController', ['$scope', Angular.controller.AttackController]);
+AppSpiderValidateApp.controller('AttackController', ['$scope','$http', Angular.controller.AttackController]);
 AppSpiderValidateApp.controller('PanelController', [Angular.controller.PanelController]);
 AppSpiderValidateApp.controller('ButtonController', ['$scope','$http', Angular.controller.ButtonController]);
 AppSpiderValidateApp.directive('prettifyheader', [Angular.directive.prettifyheader]);

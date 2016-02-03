@@ -30,6 +30,10 @@ document.addEventListener('click', function(e){
                         from: "content.js"
                     });
                     chrome.runtime.sendMessage({
+                        type: "send_http_request",
+                        from: "content.js"
+                    });
+                    chrome.runtime.sendMessage({
                         type: "open_validate_page",
                         from: "content.js"
                     });
