@@ -54,9 +54,10 @@ var httpFunctions = {
             headers: header_payload.split('\r\n\r\n')[0].trim(),
             payload: header_payload.split('\r\n\r\n')[1].trim(),
             description: array[2].trim(),
-            response_headers: {},
-            response_content: {}
+            response_headers: "Waiting for attack response....",
+            response_content: ""
         }
+
     },
 
     convertHeaderStringToJSON: function (headerString) {
@@ -95,36 +96,173 @@ var httpFunctions = {
             }
         }
         return headers;
+    },
+
+    /* Send the request using JQuery and Ajax
+     *  Obtain the response */
+    sendAttackUsingAJAX: function(attack_id, attack, callback) {
+        console.log('Sending attack using JQuery-Ajax!!');
+        var headers = {};
+        for (var header in attack.headers) {
+            /* Append 'appspider-' to restricted chrome headers */
+            if(attack.headers.hasOwnProperty(header)){
+                if(_.contains(restrictedChromeHeaders, header.toUpperCase())){
+                    if (header === "Cookie") {
+                        var cookie_str = "";
+                        for(var key in attack.headers.Cookie) {
+                            if (attack.headers.Cookie.hasOwnProperty(key)){
+                                cookie_str += key + "=" + attack.headers.Cookie[key] + "; "
+                            }
+                        }
+                        headers[token+header] = cookie_str;
+                    } else {
+                        headers[token+header] = attack.headers[header];
+                    }
+                } else {
+                    headers[header] = attack.headers[header];
+                }
+            }
+        }
+        /* Using JQuery Ajax Calls */
+        $.ajax({
+            type: attack.headers.REQUEST.method,
+            url: "http://" + attack.headers.Host + attack.headers.REQUEST.uri,
+            data: attack.payload,
+            beforeSend: function(xhr){
+                console.log("Setting request headers for attack id: " + attack_id);
+                for (var h in headers) {
+                    if(headers.hasOwnProperty(h)){
+                        xhr.setRequestHeader(h, headers[h]);
+                    }
+                }
+                console.log("Done customizing request headers!!");
+                console.log("Sending attack id: " + attack_id + " using '" +
+                    attack.headers.REQUEST.method + "' in AJAX");
+            },
+            success: function (data, text_status, response) {
+                console.log("Receive http response for attack id: " + attack_id);
+                callback(data, text_status, response);
+            },
+            error: function(data, text_status, response) {
+                console.error("Background.js: " + data);
+                callback(data, text_status, response);
+            }
+        });
+    },
+    /* Send the request using XMLHTTPRequest
+    *  Obtain the response */
+    sendAttackUsingXMLHTTPRequest: function(attack_id, attack, callback) {
+        console.log("Sending attack id: " + attack_id + " using XMLHTTPRequest!!");
+        var headers = {};
+        for (var header in attack.headers) {
+            /* Append 'appspider-' to restricted chrome headers */
+            if(attack.headers.hasOwnProperty(header)){
+                if(_.contains(restrictedChromeHeaders, header.toUpperCase())){
+                    if (header === "Cookie") {
+                        var cookie_str = "";
+                        for(var key in attack.headers.Cookie) {
+                            if (attack.headers.Cookie.hasOwnProperty(key)){
+                                cookie_str += key + "=" + attack.headers.Cookie[key] + "; "
+                            }
+                        }
+                        headers[token+header] = cookie_str;
+                    } else {
+                        headers[token+header] = attack.headers[header];
+                    }
+                } else {
+                    headers[header] = attack.headers[header];
+                }
+            }
+        }
+        /* Using XMLHttpRequest */
+        var xhr = new XMLHttpRequest();
+        xhr.open(
+            attack.headers.REQUEST.method,
+            "http://" + attack.headers.Host + attack.headers.REQUEST.uri,
+            true
+        );
+        console.log("Customizing http request headers for attack id: " + attack_id);
+        for (var h in headers) {
+            if(headers.hasOwnProperty(h)){
+                xhr.setRequestHeader(h, headers[h]);
+            }
+        }
+        console.log("Done setting custom headers!.");
+        xhr.onreadystatechange = function(){
+            if (xhr.status === 200 && xhr.readyState == 4) {
+                console.log("Receiving http response for attack id: " + attack_id );
+                callback(xhr);
+            } else {
+                console.error("Background.js: xhr.status: "+ xhr.status
+                    + " xhr.readyState: " + xhr.readyState
+                    + " for attack id: " + attack_id);
+            }
+        };
+
+        switch(attack.headers.REQUEST.method.toUpperCase()) {
+            case 'GET':
+                console.log("Sending request using GET XMLHTTPRequest");
+                xhr.send();
+                break;
+            case 'POST':
+                console.log("Sending request using POST XMLHTTPRequest");
+                xhr.send(attack.payload);
+                break;
+            default:
+                console.error("Background.js: Unable to send request");
+                break;
+        }
     }
 
 };
 
-/* Coming from the Content.js */
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+var app = {
+    create_new_window: function(){
+        chrome.tabs.create({
+            url: chrome.extension.getURL('../validate.html'),
+            active: false
+        }, function (tab) {
+            // After the tab has been created, open a window to inject the tab
+            chrome.windows.create({
+                tabId: tab.id,
+                type: 'popup',
+                focused: true,
+                width: 940,
+                height: 745
+                // incognito, top, left, ...
+            });
+        });
+        console.log("Opening validate page");
+    }
+};
 
-    switch (request.from.toLocaleLowerCase()) {
+/* Coming from the Content.js */
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+
+    switch (message.from.toLocaleLowerCase()) {
         case "content.js":
-            switch (request.type) {
+            switch (message.type) {
                 case "open_validate_page":
-                    chrome.tabs.create({
-                        url: chrome.extension.getURL('../validate.html'),
-                        active: false
-                    }, function (tab) {
-                        // After the tab has been created, open a window to inject the tab
-                        chrome.windows.create({
-                            tabId: tab.id,
-                            type: 'popup',
-                            focused: true,
-                            width: 940,
-                            height: 745
-                            // incognito, top, left, ...
-                        });
-                    });
+                    app.create_new_window();
+                    //chrome.tabs.create({
+                    //    url: chrome.extension.getURL('../validate.html'),
+                    //    active: false
+                    //}, function (tab) {
+                    //    // After the tab has been created, open a window to inject the tab
+                    //    chrome.windows.create({
+                    //        tabId: tab.id,
+                    //        type: 'popup',
+                    //        focused: true,
+                    //        width: 940,
+                    //        height: 745
+                    //        // incognito, top, left, ...
+                    //    });
+                    //});
                     console.log("Opening validate page");
                     break;
                 case "save_encoded_http_request":
                     /* Saving the encodedHTTPRequest */
-                    encodedHTTPRequest = request.data.encodedHTTPRequest;
+                    encodedHTTPRequest = message.data.encodedHTTPRequest;
                     console.log("Saving encoded http request");
                     break;
                 case "parse_and_save_http_request":
@@ -143,114 +281,99 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                     var step = 1;
                     for (var i = 0; i < requests.length; i++) {
                         /* For each defined element */
-                        if (requests[i]) {
-                            var request = httpFunctions.splitRequest(requests[i]);
-                            /* (3) Convert header to JSON Object */
-                            request.headers = httpFunctions.convertHeaderStringToJSON(request.headers);
-                            //$http({
-                            //    method: global_headers.REQUEST.method,
-                            //    url: "http://" + global_headers.Host + global_headers.REQUEST.uri,
-                            //    data: request.payload
-                            //}).then(function successRequest(response){
-                            //    console.log("Success http response!!");
-                            //    request.response_headers = response.headers();
-                            //    request.response_content = response.data;
-                            //}, function errorRequest(response){
-                            //    console.error("Background.js: Error -" + response);
-                            //});
 
-                            /* (4) Save request as with step being the key */
-                            var attack_obj = {};
-                            attack_obj[step] = request;
-                            chrome.storage.local.set(attack_obj, function () {
-                                console.log("Request save to key: '" + step + "'");
+                        if (_.size(requests[i]) != 0) {
+                            /* Split the request to header, payload, description,
+                               response_header, and response_content */
+                            var attack = httpFunctions.splitRequest(requests[i]);
+                            /* (3) Convert header to JSON Object */
+                            attack.headers = httpFunctions.convertHeaderStringToJSON(attack.headers);
+                            var attack_xmlhttprequest = attack;
+                            /* (3.1) Sending attack using XMLHTTPRequest */
+                            httpFunctions.sendAttackUsingXMLHTTPRequest(step, attack_xmlhttprequest, function(xhr){
+                                /* (4) Save attack_xmlhttprequest as with step being the key */
+                                attack_xmlhttprequest.response_headers = xhr.getAllResponseHeaders();
+                                attack_xmlhttprequest.response_content = xhr.responseText;
+                                var attack_obj = {};
+                                attack_obj[step] = attack_xmlhttprequest;
+                                chrome.storage.local.set(attack_obj, function(){
+                                    console.log("Attack "+ step + " was saved using the XMLHTTPRequest!!");
+                                });
+                                if (step >= requests.length) {
+                                    app.create_new_window();
+                                }
                             });
                             step++;
+
+                            /* (4) Save attack as with step being the key */
+                            //var attack_obj = {};
+                            //attack_obj[step] = attack;
+                            //chrome.storage.local.set(attack_obj, function () {
+                            //    console.log("Attack save with ID: '" + Object.keys(attack_obj)[0] + "' to the chrome local storage");
+                            //});
+                            //step++;
                         }
                     }
                     console.log("http request saved! Clearing encoded http request");
                     encodedHTTPRequest = null;
-                    break;
-                default:
                     break;
                 case "send_http_request":
                     /* Getting all steps */
                     chrome.storage.local.get(null, function (attacks) {
                         for (var id in attacks) {
                             console.log("Getting attack with id: " + id);
-                            var attack = attacks[id];
-                            //var xhr = new XMLHttpRequest();
-                            //xhr.onreadystatechange = function(){
-                            //    if (xhr.status === 200 && xhr.readyState == 4) {
-                            //        console.log("HTTP response success for attack id: " + id );
-                            //        attack.response_headers = xhr.getAllResponseHeaders();
-                            //        attack.response_content = xhr.responseText;
-                            //    } else {
-                            //        console.error("Response header error!!");
-                            //        attack.response_headers = 'Request Error';
-                            //        attack.response_content = 'Unable to send attack request'
-                            //    }
-                            //};
-                            //
-                            //xhr.open(
-                            //    global_headers.REQUEST.method,
-                            //    "http://" + global_headers.Host + global_headers.REQUEST.uri,
-                            //    true
-                            //);
-                            //
-                            //switch(global_headers.REQUEST.method.toUpperCase()) {
-                            //    case 'GET':
-                            //        xhr.send();
-                            //        break;
-                            //    case 'POST':
-                            //        xhr.send(attack.payload);
-                            //        break;
-                            //    default:
-                            //        console.error("Background.js: Unable to send request");
-                            //        break;
-                            //}
-
-                            var headers = {};
-                            for (var header in attack.headers) {
-                                if(_.contains(restrictedChromeHeaders, header.toUpperCase())){
-                                    if (header === "Cookie") {
-                                        var cookie_str = "";
-                                        for(var key in attack.headers.Cookie) {
-                                            cookie_str += key + "=" + attack.headers.Cookie[key] + "; "
-                                        }
-                                        headers[token+header] = cookie_str;
-                                    } else {
-                                        headers[token+header] = attack.headers[header];
-                                    }
-                                } else {
-                                    headers[header] = attack.headers[header];
-                                }
-                            }
-                            var http_request;
-                            http_request = $.ajax({
-                                type: attack.headers.REQUEST.method,
-                                url: "http://" + attack.headers.Host + attack.headers.REQUEST.uri,
-                                headers: headers,
-                                data: attack.payload,
-                                success: function (data, text_status, request) {
-                                    attack.response_headers = request.getAllResponseHeaders();
-                                    attack.response_content = data;
+                            if(attacks.hasOwnProperty(id)){
+                                var attack = attacks[id];
+                                var attack_xmlhttprequest = attack;
+                                var attack_ajax = attack;
+                                /* Using the XHMLHttpRequest */
+                                httpFunctions.sendAttackUsingXMLHTTPRequest(id, attack_xmlhttprequest, function(xhr){
+                                    attack_xmlhttprequest.response_headers = xhr.getAllResponseHeaders();
+                                    attack_xmlhttprequest.response_content = xhr.responseText;
                                     var attack_obj = {};
-                                    attack_obj[id] = attack;
+                                    attack_obj[id] = attack_xmlhttprequest;
                                     chrome.storage.local.set(attack_obj, function(){
-                                        console.log("Attack "+ id + " was saved!!");
+                                        console.log("Attack "+ id + " was saved using the XMLHTTPRequest!!");
+                                    });
+                                });
+
+                                /* Using the Ajax Call*/
+                                httpFunctions.sendAttackUsingAJAX(id, attack_ajax, function(data, text_status, response){
+                                    attack_ajax.response_headers = response.getAllResponseHeaders();
+                                    attack_ajax.response_content = data;
+                                    var attack_obj = {};
+                                    attack_obj[id] = attack_ajax;
+                                    chrome.storage.local.set(attack_obj, function(){
+                                        console.log("Attack "+ id + " was saved using Ajax!!");
                                         return true;
                                     });
-                                },
-                                error: function(data, text_status, request) {
-                                    console.error("Background.js: " + data);
-                                }
-                            });
+                                });
+
+                            }
                         }
                     });
                     break;
                 case "save_http_response":
                     break;
+                case "clear_chrome_storage":
+                    switch(message.data.storage_type) {
+                        case "local":
+                            chrome.storage.local.clear(function(){
+                                console.log("Clearing chrome local storage");
+                            });
+                            break;
+                        case "sync":
+                            chrome.storage.sync.clear(function(){
+                                console.log("Clearing chrome sync storage");
+                            });
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                default:
+                    break;
+
             }
             break;
         default:
@@ -304,51 +427,18 @@ chrome.runtime.onConnect.addListener(function(channel) {
 chrome.webRequest.onBeforeSendHeaders.addListener(
     function (details) {
         try {
-            //if (Object.getOwnPropertyNames(global_headers).length != 0 &&
-            //    details.url.match(new RegExp(global_headers.Host))) {
-            //    var headers = details.requestHeaders;
-            //    var cookie_string = "";
-            //
-            //
-            //    /* Sanitize Global Headers */
-            //    delete global_headers.REQUEST;
-            //    for (var cookie in global_headers.Cookie) {
-            //        cookie_string += cookie + "=" + global_headers.Cookie[cookie] + ";"
-            //    }
-            //    global_headers.Cookie = cookie_string;
-            //    for (var header in global_headers) {
-            //        var found = false;
-            //        for(var index = 0; index < headers.length && !found; index++) {
-            //            if (headers[index].name.toLowerCase() === header.toLowerCase()) {
-            //                console.log("Found a match!!");
-            //                headers[index].value = global_headers[header];
-            //                delete global_headers[header];
-            //                found = true;
-            //            }
-            //        }
-            //        if (!found) {
-            //            headers.push({
-            //                name: header,
-            //                value: global_headers[header]
-            //            });
-            //            delete global_headers[header];
-            //        }
-            //    }
-            //}
-
             var headers = details.requestHeaders;
             var map = {};
             var new_headers = [];
             for( var index = 0; index < headers.length; index++) {
-                if(!headers[index].name.match(new RegExp(TOKEN))){
+                if(!headers[index].name.match(new RegExp(token))){
                     map[headers[index].name] = headers[index].value;
                 }
             }
             for( var index = 0; index < headers.length; index++) {
-                if(headers[index].name.match(new RegExp(TOKEN))){
+                if(headers[index].name.match(new RegExp(token))){
                     //slice the name
-                    var name = headers[index].name.slice(TOKEN.length);
-                    console.log("Name is " + name);
+                    var name = headers[index].name.slice(token.length);
                     map[name] = headers[index].value;
                 }
             }
