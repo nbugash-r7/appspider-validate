@@ -256,17 +256,3 @@ AppSpiderValidateApp.controller('AttackController', ['$scope','$http', Angular.c
 AppSpiderValidateApp.controller('PanelController', [Angular.controller.PanelController]);
 AppSpiderValidateApp.controller('ButtonController', ['$scope','$http', Angular.controller.ButtonController]);
 AppSpiderValidateApp.directive('prettifyheader', [Angular.directive.prettifyheader]);
-
-chrome.storage.onChanged.addListener(function(attacks, namespace){
-    for (var attack_id in attacks) {
-        var attack_storage = attacks[attack_id];
-        console.log('Storage key "%s" in namespace "%s" changed. ' +
-            'Old value was "%s", new value is "%s".',
-            attack_id,
-            namespace,
-            attack_storage.oldValue,
-            attack_storage.newValue);
-        $('textarea#attack-response-headers-'+attack_id).val(attack_storage.newValue.response_headers);
-        $('textarea#attack-response-content-'+attack_id).val(attack_storage.newValue.response_content);
-    }
-});

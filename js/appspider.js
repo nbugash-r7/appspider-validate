@@ -91,16 +91,18 @@ var AppSpider = {
     }
 };
 
-//chrome.storage.onChanged.addListener(function(attacks, namespace){
-//    for (var attack_id in attacks) {
-//        var attack_storage = attacks[attack_id];
-//        console.log('Storage key "%s" in namespace "%s" changed. ' +
-//            'Old value was "%s", new value is "%s".',
-//            attack_id,
-//            namespace,
-//            attack_storage.oldValue,
-//            attack_storage.newValue);
-//        $('textarea#attack-response-headers-'+attack_id).val(attack_storage.newValue.response_headers);
-//        $('textarea#attack-response-content-'+attack_id).val(attack_storage.newValue.response_content);
-//    }
-//});
+chrome.storage.onChanged.addListener(function(attacks, namespace){
+    for (var attack_id in attacks) {
+        var attack_storage = attacks[attack_id];
+        console.log('Storage key "%s" in namespace "%s" changed. ' +
+            'Old value was "%s", new value is "%s".',
+            attack_id,
+            namespace,
+            attack_storage.oldValue,
+            attack_storage.newValue);
+        $('textarea#attack-request-headers--'+attack_id).val(attack_storage.newValue.headers);
+        $('textarea#attack-attack-request-payload-'+attack_id).val(attack_storage.newValue.payload);
+        $('textarea#attack-response-headers-'+attack_id).val(attack_storage.newValue.response_headers);
+        $('textarea#attack-response-content-'+attack_id).val(attack_storage.newValue.response_content);
+    }
+});

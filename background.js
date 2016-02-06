@@ -29,6 +29,7 @@ var restrictedChromeHeaders = [
 var current_step;
 
 var token = 'appspider-';
+
 /* Helper functions */
 var httpFunctions = {
     decodeRequest: function (encodedRequest) {
@@ -48,15 +49,18 @@ var httpFunctions = {
 
     /* Split the request to header, payload, and description */
     splitRequest: function (request) {
-        var array = request.split(/(A#B#C#D#E#F#G#H#)/);
-        var header_payload = array[0];
-        return {
-            headers: header_payload.split('\r\n\r\n')[0].trim(),
-            payload: header_payload.split('\r\n\r\n')[1].trim(),
-            description: array[2].trim(),
-            response_headers: "Waiting for attack response....",
-            response_content: ""
+        if(_.size(request) != 0) {
+            var array = request.split(/(A#B#C#D#E#F#G#H#)/);
+            var header_payload = array[0];
+            return {
+                headers: header_payload.split('\r\n\r\n')[0].trim(),
+                payload: header_payload.split('\r\n\r\n')[1].trim(),
+                description: array[2].trim(),
+                response_headers: "Waiting for attack response....",
+                response_content: ""
+            }
         }
+
 
     },
 
@@ -212,12 +216,9 @@ var httpFunctions = {
                 console.error("Background.js: Unable to send request");
                 break;
         }
-    }
+    },
 
-};
-
-var app = {
-    create_new_window: function(){
+    openNewWindow: function() {
         chrome.tabs.create({
             url: chrome.extension.getURL('../validate.html'),
             active: false
@@ -234,6 +235,7 @@ var app = {
         });
         console.log("Opening validate page");
     }
+
 };
 
 /* Coming from the Content.js */
@@ -243,7 +245,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         case "content.js":
             switch (message.type) {
                 case "open_validate_page":
-                    app.create_new_window();
+                    httpFunctions.openNewWindow();
                     //chrome.tabs.create({
                     //    url: chrome.extension.getURL('../validate.html'),
                     //    active: false
@@ -290,28 +292,28 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                             attack.headers = httpFunctions.convertHeaderStringToJSON(attack.headers);
                             var attack_xmlhttprequest = attack;
                             /* (3.1) Sending attack using XMLHTTPRequest */
-                            httpFunctions.sendAttackUsingXMLHTTPRequest(step, attack_xmlhttprequest, function(xhr){
-                                /* (4) Save attack_xmlhttprequest as with step being the key */
-                                attack_xmlhttprequest.response_headers = xhr.getAllResponseHeaders();
-                                attack_xmlhttprequest.response_content = xhr.responseText;
-                                var attack_obj = {};
-                                attack_obj[step] = attack_xmlhttprequest;
-                                chrome.storage.local.set(attack_obj, function(){
-                                    console.log("Attack "+ step + " was saved using the XMLHTTPRequest!!");
-                                });
-                                if (step >= requests.length) {
-                                    app.create_new_window();
-                                }
-                            });
-                            step++;
-
-                            /* (4) Save attack as with step being the key */
-                            //var attack_obj = {};
-                            //attack_obj[step] = attack;
-                            //chrome.storage.local.set(attack_obj, function () {
-                            //    console.log("Attack save with ID: '" + Object.keys(attack_obj)[0] + "' to the chrome local storage");
+                            //httpFunctions.sendAttackUsingXMLHTTPRequest(step, attack_xmlhttprequest, function(xhr){
+                            //    /* (4) Save attack_xmlhttprequest as with step being the key */
+                            //    attack_xmlhttprequest.response_headers = xhr.getAllResponseHeaders();
+                            //    attack_xmlhttprequest.response_content = xhr.responseText;
+                            //    var attack_obj = {};
+                            //    attack_obj[step] = attack_xmlhttprequest;
+                            //    chrome.storage.local.set(attack_obj, function(){
+                            //        console.log("Attack "+ step + " was saved using the XMLHTTPRequest!!");
+                            //    });
+                            //    if (step >= requests.length) {
+                            //        httpFunctions.openNewWindow();
+                            //    }
                             //});
                             //step++;
+
+                            /* (4) Save attack as with step being the key */
+                            var attack_obj = {};
+                            attack_obj[step] = attack;
+                            chrome.storage.local.set(attack_obj, function () {
+                                console.log("Attack save with ID: '" + Object.keys(attack_obj)[0] + "' to the chrome local storage");
+                            });
+                            step++;
                         }
                     }
                     console.log("http request saved! Clearing encoded http request");
@@ -355,11 +357,55 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                     break;
                 case "save_http_response":
                     break;
-                case "clear_chrome_storage":
-                    switch(message.data.storage_type) {
+                case "run_validate_page":
+                    var encodedhttp = message.data.encodedHTTPRequest;
+                    var storage_type = message.data.storage_type;
+
+                    /*(1) Clearing chrome storage */
+                    switch(storage_type) {
                         case "local":
                             chrome.storage.local.clear(function(){
                                 console.log("Clearing chrome local storage");
+                                /* (2) Decode http request */
+                                var decodedhttprequest = httpFunctions.decodeRequest(encodedhttp);
+                                /* (3) Split the decoded http request into an array of requests */
+                                var requests = _.compact(httpFunctions.splitRequests(decodedhttprequest));
+                                /* (4) For each request in the request array, parse into
+                                 * a. attack request header
+                                 * b. attack request payload
+                                 * c. attack description
+                                 * d. attack response header
+                                 * e. attack response content
+                                 * */
+                                var step = 1;
+                                for (var index = 0; index < requests.length; index++ ) {
+                                    var attack = httpFunctions.splitRequest(requests[index]);
+                                    attack.id = step;
+                                    attack.headers = httpFunctions.convertHeaderStringToJSON(attack.headers);
+                                    /* Save attack to chrome.storage.local */
+                                    (function(){
+                                        var attack_obj = {};
+                                        attack_obj[step] = attack;
+                                        chrome.storage.local.set(attack_obj, function(){
+                                            var key = Object.keys(attack_obj)[0];
+                                            console.log("Save attack id: " + key + " first pass!");
+                                            httpFunctions.sendAttackUsingXMLHTTPRequest(key, attack_obj[key], function(xhr){
+                                                attack_obj[key].response_headers = xhr.getAllResponseHeaders();
+                                                attack_obj[key].response_content = xhr.responseText;
+                                                chrome.storage.local.set(attack_obj, function(){
+                                                    console.log("Saving attack id: "+ key +
+                                                        " to local storage - Second pass!!");
+                                                });
+                                            });
+                                        });
+                                    })();
+                                    step++;
+                                    chrome.storage.local.get(null, function(attacks){
+                                        if(_.size(attacks) >= requests.length){
+                                            httpFunctions.openNewWindow();
+                                        }
+                                    });
+                                }
                             });
                             break;
                         case "sync":
@@ -368,8 +414,10 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                             });
                             break;
                         default:
+                            console.error("Background.js: Unable to determine storage type");
                             break;
                     }
+
                     break;
                 default:
                     break;
