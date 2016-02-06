@@ -167,18 +167,22 @@ var Angular = {
 
                     var headers = {};
                     for (var header in attack.headers) {
-                        if(_.contains(restrictedChromeHeaders, header.toUpperCase())){
-                            if (header === "Cookie") {
-                                var cookie_str = "";
-                                for(var key in attack.headers.Cookie) {
-                                    cookie_str += key + "=" + attack.headers.Cookie[key] + "; "
+                        if (attack.headers.hasOwnProperty(header)){
+                            if(_.contains(restrictedChromeHeaders, header.toUpperCase())){
+                                if (header === "Cookie") {
+                                    var cookie_str = "";
+                                    for(var key in attack.headers.Cookie) {
+                                        if(attack.headers.Cookie.hasOwnProperty(key)){
+                                            cookie_str += key + "=" + attack.headers.Cookie[key] + "; "
+                                        }
+                                    }
+                                    headers[token+header] = cookie_str;
+                                } else {
+                                    headers[token+header] = attack.headers[header];
                                 }
-                                headers[token+header] = cookie_str;
                             } else {
-                                headers[token+header] = attack.headers[header];
+                                headers[header] = attack.headers[header];
                             }
-                        } else {
-                            headers[header] = attack.headers[header];
                         }
                     }
 
@@ -189,41 +193,20 @@ var Angular = {
                         data: attack.payload
                     }).then(function successRequest(response){
                         console.log("Success!!");
-                        attack.response_headers = response.headers();
+                        if (typeof response.headers() === "object") {
+                            attack.response_headers = AppSpider.helper.convertJSONToString(response.headers());
+                        } else {
+                            attack.response_headers = response.headers();
+                        }
                         attack.response_content = response.data;
                         AppSpider.attack.save(attack_id, attack);
                     }, function errorRequest(response){
+                        attack.response_headers = "Error:\r\nUnable to obtain the response header for " +
+                            button.protocoltype.toLocaleLowerCase() + "://" + attack.headers.Host + attack.headers.REQUEST.uri;
+                        attack.response_content = "Error: Unable to obtain the response body";
+                        AppSpider.attack.save(attack_id, attack);
                         console.error("App.js: Error - " + response);
                     });
-
-                    //var channel = chrome.runtime.connect({name: "app.js"});
-                    //channel.postMessage({
-                    //    type: 'savehttpHeaders',
-                    //    data: {
-                    //        headers: attack.headers
-                    //    }
-                    //});
-                    //channel.onMessage.addListener(function(message){
-                    //    /* Message from background.js */
-                    //    if (message.type === "httpHeaderSaved" && message.from === "Background.js") {
-                    //        $http({
-                    //            method: attack.headers.REQUEST.method,
-                    //            url: button.protocoltype + "://" + attack.headers.Host + attack.headers.REQUEST.uri,
-                    //            data: attack.payload
-                    //        }).then(function successRequest(response){
-                    //            console.log("Success!!");
-                    //            attack.response_headers = response.headers();
-                    //            attack.response_content = response.data;
-                    //            AppSpider.attack.save(attack_id, attack);
-                    //        }, function errorRequest(response){
-                    //            console.error("App.js: Error - " + response);
-                    //        });
-                    //
-                    //    } else {
-                    //        console.error("App.js: Invalid message from " + message.from +
-                    //            " with message type:" + message.type);
-                    //    }
-                    //});
                 });
             };
             button.compare = function(attack_id){

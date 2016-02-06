@@ -23,35 +23,10 @@ document.addEventListener('click', function(e){
                         from: 'content.js',
                         data: {
                             storage_type: 'local', //storage_type: local or sync
-                            encodedHTTPRequest: encodedHTTPRequest
+                            encodedHTTPRequest: encodedHTTPRequest,
+                            send_request_as: 'xmlhttprequest' // send_request_as: xmlhttprequest or ajax
                         }
                     });
-                    //chrome.runtime.sendMessage({
-                    //    type: "clear_chrome_storage",
-                    //    from: "content.js",
-                    //    data: {
-                    //        storage_type: "local" // storage_type: local or sync
-                    //    }
-                    //});
-                    //chrome.runtime.sendMessage({
-                    //    type: "save_encoded_http_request",
-                    //    from: "content.js",
-                    //    data: {
-                    //        encodedHTTPRequest: encodedHTTPRequest
-                    //    }
-                    //});
-                    //chrome.runtime.sendMessage({
-                    //    type: "parse_and_save_http_request",
-                    //    from: "content.js"
-                    //});
-                    //chrome.runtime.sendMessage({
-                    //    type: "send_http_request",
-                    //    from: "content.js"
-                    //});
-                    //chrome.runtime.sendMessage({
-                    //    type: "open_validate_page",
-                    //    from: "content.js"
-                    //});
                 }
             }
         }

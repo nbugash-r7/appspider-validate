@@ -27,7 +27,6 @@ var restrictedChromeHeaders = [
     "VIA"
 ];
 var current_step;
-
 var token = 'appspider-';
 
 /* Helper functions */
@@ -68,7 +67,7 @@ var httpFunctions = {
         var headerArray = headerString.split("\r\n");
         var headers = {};
         for (var i = 0; i < headerArray.length; i++) {
-            if (headerArray[i].toUpperCase().match(/GET|POST|PUT|DELETE/)) {
+            if (headerArray[i].toUpperCase().match(/(^GET|^POST|^PUT|^DELETE)/)) {
                 var requestArray = headerArray[i].split(" ");
                 headers.REQUEST = {
                     method: requestArray[0],
@@ -80,7 +79,7 @@ var httpFunctions = {
                 var header_name = a[0].trim();
                 switch(header_name) {
                     case "Referer":
-                        headers[header_name] = a.slice(1).join(":").trim();
+                        headers.Referer = a.slice(1).join(":").trim();
                         break;
                     case "Cookie":
                         var cookiearray = a[a.length - 1].split(';');
@@ -91,7 +90,7 @@ var httpFunctions = {
                                 cookieValues[array[0].trim()] = array[array.length -1].trim();
                             }
                         }
-                        headers[header_name] = cookieValues;
+                        headers.Cookie = cookieValues;
                         break;
                     default:
                         headers[header_name] = a[a.length - 1].trim();
@@ -104,7 +103,7 @@ var httpFunctions = {
 
     /* Send the request using JQuery and Ajax
      *  Obtain the response */
-    sendAttackUsingAJAX: function(attack_id, attack, callback) {
+    sendAttackUsingAJAX: function(attack_id, attack, success, error, always) {
         console.log('Sending attack using JQuery-Ajax!!');
         var headers = {};
         for (var header in attack.headers) {
@@ -143,19 +142,23 @@ var httpFunctions = {
                 console.log("Sending attack id: " + attack_id + " using '" +
                     attack.headers.REQUEST.method + "' in AJAX");
             },
-            success: function (data, text_status, response) {
-                console.log("Receive http response for attack id: " + attack_id);
-                callback(data, text_status, response);
+            done: function (data, text_status, jqXHR) {
+                console.log("Ajax done!!!!!");
+                success(data, text_status, jqXHR);
             },
-            error: function(data, text_status, response) {
-                console.error("Background.js: " + data);
-                callback(data, text_status, response);
+            fail: function(jqXHR, textStatus, errorThrown) {
+                console.error("Ajax failed!!!!!");
+                error(jqXHR, textStatus, errorThrown);
+            },
+            always: function(data, text_status, jqXHR) {
+                console.log("Ajax always !!!!!");
+                always(data, text_status, jqXHR);
             }
         });
     },
     /* Send the request using XMLHTTPRequest
     *  Obtain the response */
-    sendAttackUsingXMLHTTPRequest: function(attack_id, attack, callback) {
+    sendAttackUsingXMLHTTPRequest: function(attack_id, attack, success, error) {
         console.log("Sending attack id: " + attack_id + " using XMLHTTPRequest!!");
         var headers = {};
         for (var header in attack.headers) {
@@ -193,13 +196,36 @@ var httpFunctions = {
         }
         console.log("Done setting custom headers!.");
         xhr.onreadystatechange = function(){
-            if (xhr.status === 200 && xhr.readyState == 4) {
-                console.log("Receiving http response for attack id: " + attack_id );
-                callback(xhr);
+            if (xhr.status == 200) {
+                switch(xhr.readyState) {
+                    case 0:
+                        console.log("Request not yet initialized");
+                        break;
+                    case 1:
+                        console.log("Server connection established.");
+                        break;
+                    case 2:
+                        console.log("Request received");
+                        break;
+                    case 3:
+                        console.log("Processing request");
+                        break;
+                    case 4:
+                        console.log("Request finished and response is ready");
+                        console.log("Receiving http response for attack id: " + attack_id +
+                            " with readyState: " + xhr.readyState + " and status of " + xhr.status);
+                        success(xhr);
+                        break;
+                    default:
+                        error(xhr);
+                        console.error("Background.js: xhr.status: "+ xhr.status
+                            + " xhr.readyState: " + xhr.readyState
+                            + " for attack id: " + attack_id);
+                        break;
+
+                }
             } else {
-                console.error("Background.js: xhr.status: "+ xhr.status
-                    + " xhr.readyState: " + xhr.readyState
-                    + " for attack id: " + attack_id);
+                console.log("Background.js - " + xhr.status + ": Page not found");
             }
         };
 
@@ -218,9 +244,9 @@ var httpFunctions = {
         }
     },
 
-    openNewWindow: function() {
+    openNewWindow: function(htmlpage) {
         chrome.tabs.create({
-            url: chrome.extension.getURL('../validate.html'),
+            url: chrome.extension.getURL('../'+ htmlpage),
             active: false
         }, function (tab) {
             // After the tab has been created, open a window to inject the tab
@@ -245,21 +271,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         case "content.js":
             switch (message.type) {
                 case "open_validate_page":
-                    httpFunctions.openNewWindow();
-                    //chrome.tabs.create({
-                    //    url: chrome.extension.getURL('../validate.html'),
-                    //    active: false
-                    //}, function (tab) {
-                    //    // After the tab has been created, open a window to inject the tab
-                    //    chrome.windows.create({
-                    //        tabId: tab.id,
-                    //        type: 'popup',
-                    //        focused: true,
-                    //        width: 940,
-                    //        height: 745
-                    //        // incognito, top, left, ...
-                    //    });
-                    //});
+                    httpFunctions.openNewWindow('validate.html');
                     console.log("Opening validate page");
                     break;
                 case "save_encoded_http_request":
@@ -290,29 +302,14 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                             var attack = httpFunctions.splitRequest(requests[i]);
                             /* (3) Convert header to JSON Object */
                             attack.headers = httpFunctions.convertHeaderStringToJSON(attack.headers);
-                            var attack_xmlhttprequest = attack;
-                            /* (3.1) Sending attack using XMLHTTPRequest */
-                            //httpFunctions.sendAttackUsingXMLHTTPRequest(step, attack_xmlhttprequest, function(xhr){
-                            //    /* (4) Save attack_xmlhttprequest as with step being the key */
-                            //    attack_xmlhttprequest.response_headers = xhr.getAllResponseHeaders();
-                            //    attack_xmlhttprequest.response_content = xhr.responseText;
-                            //    var attack_obj = {};
-                            //    attack_obj[step] = attack_xmlhttprequest;
-                            //    chrome.storage.local.set(attack_obj, function(){
-                            //        console.log("Attack "+ step + " was saved using the XMLHTTPRequest!!");
-                            //    });
-                            //    if (step >= requests.length) {
-                            //        httpFunctions.openNewWindow();
-                            //    }
-                            //});
-                            //step++;
-
                             /* (4) Save attack as with step being the key */
                             var attack_obj = {};
                             attack_obj[step] = attack;
-                            chrome.storage.local.set(attack_obj, function () {
-                                console.log("Attack save with ID: '" + Object.keys(attack_obj)[0] + "' to the chrome local storage");
-                            });
+                            (function(step){
+                                chrome.storage.local.set(attack_obj, function () {
+                                    console.log("Attack save with ID: '" + step + "' to the chrome local storage");
+                                });
+                            })(step);
                             step++;
                         }
                     }
@@ -329,27 +326,37 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                                 var attack_xmlhttprequest = attack;
                                 var attack_ajax = attack;
                                 /* Using the XHMLHttpRequest */
-                                httpFunctions.sendAttackUsingXMLHTTPRequest(id, attack_xmlhttprequest, function(xhr){
-                                    attack_xmlhttprequest.response_headers = xhr.getAllResponseHeaders();
-                                    attack_xmlhttprequest.response_content = xhr.responseText;
-                                    var attack_obj = {};
-                                    attack_obj[id] = attack_xmlhttprequest;
-                                    chrome.storage.local.set(attack_obj, function(){
-                                        console.log("Attack "+ id + " was saved using the XMLHTTPRequest!!");
-                                    });
-                                });
+                                (function(attack_xmlhttprequest, id){
+                                    httpFunctions.sendAttackUsingXMLHTTPRequest(id, attack_xmlhttprequest,
+                                        function(xhr) {
+                                            attack_xmlhttprequest.response_headers = xhr.getAllResponseHeaders();
+                                            attack_xmlhttprequest.response_content = xhr.responseText;
+                                            var attack_obj = {};
+                                            attack_obj[id] = attack_xmlhttprequest;
+                                            chrome.storage.local.set(attack_obj, function () {
+                                                console.log("Attack " + id + " was saved using the XMLHTTPRequest!!");
+                                            });
+                                        },
+                                        function(err){
+                                            console.error("Background.js: xhr.status: "+ err.status
+                                                + " xhr.readyState: " + err.readyState
+                                                + " for attack id: " + id);
+                                        });
+                                })(attack_xmlhttprequest);
 
                                 /* Using the Ajax Call*/
-                                httpFunctions.sendAttackUsingAJAX(id, attack_ajax, function(data, text_status, response){
-                                    attack_ajax.response_headers = response.getAllResponseHeaders();
-                                    attack_ajax.response_content = data;
-                                    var attack_obj = {};
-                                    attack_obj[id] = attack_ajax;
-                                    chrome.storage.local.set(attack_obj, function(){
-                                        console.log("Attack "+ id + " was saved using Ajax!!");
-                                        return true;
+                                (function(attack_ajax, id){
+                                    httpFunctions.sendAttackUsingAJAX(id, attack_ajax, function(data, text_status, response){
+                                        attack_ajax.response_headers = response.getAllResponseHeaders();
+                                        attack_ajax.response_content = data;
+                                        var attack_obj = {};
+                                        attack_obj[id] = attack_ajax;
+                                        chrome.storage.local.set(attack_obj, function(){
+                                            console.log("Attack "+ id + " was saved using Ajax!!");
+                                            return true;
+                                        });
                                     });
-                                });
+                                })(attack_ajax);
 
                             }
                         }
@@ -388,30 +395,62 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                                         attack_obj[step] = attack;
                                         chrome.storage.local.set(attack_obj, function(){
                                             var key = Object.keys(attack_obj)[0];
-                                            console.log("Save attack id: " + key + " first pass!");
-                                            httpFunctions.sendAttackUsingXMLHTTPRequest(key, attack_obj[key], function(xhr){
-                                                attack_obj[key].response_headers = xhr.getAllResponseHeaders();
-                                                attack_obj[key].response_content = xhr.responseText;
-                                                chrome.storage.local.set(attack_obj, function(){
-                                                    console.log("Saving attack id: "+ key +
-                                                        " to local storage - Second pass!!");
-                                                });
-                                            });
+                                            console.log("Save attack id: " + key + " with just http request!");
+                                            switch (message.data.send_request_as) {
+                                                case 'xmlhttprequest':
+                                                    /* Use xmlhttprequest to send the attack */
+                                                    httpFunctions.sendAttackUsingXMLHTTPRequest(key, attack_obj[key],
+                                                        function(xhr) {
+                                                            attack_obj[key].response_headers = xhr.getAllResponseHeaders();
+                                                            attack_obj[key].response_content = xhr.responseText;
+                                                            chrome.storage.local.set(attack_obj, function () {
+                                                                console.log("Saving attack id: " + key +
+                                                                    " to local storage with http response!!");
+                                                            });
+                                                        },
+                                                        function(err){
+                                                            console.error("Background.js: xhr.status: "+ err.status
+                                                                + " for attack id: " + key);
+
+                                                        });
+                                                    break;
+                                                case 'ajax':
+                                                    /* Use ajax request to send the attack */
+                                                    httpFunctions.sendAttackUsingAJAX(key,attack_obj[key],
+                                                        function(data, text_status, jqXHR){ // Success
+                                                            console.log("Receive http response for attack id: " + key);
+                                                            attack_obj[key].response_headers = jqXHR.getAllResponseHeaders();
+                                                            attack_obj[key].response_content = data.responseText;
+                                                            chrome.storage.local.set(attack_obj, function(){
+                                                                console.log("Saving attack id: "+ key +
+                                                                    " to local storage with http response!!");
+                                                            });
+                                                        },function(jqXHR, textStatus, errorThrown){ // fail
+                                                            console.error(textStatus + " Unable to send ajax request with message '" +
+                                                                errorThrown + "'")
+                                                        }, function(data, text_status, jqXHR){ //always
+                                                            console.log("Ajax completed!!");
+                                                        });
+                                                    break;
+                                                default:
+                                                    console.error("Background.js: Unknown request type! " +
+                                                        "Use either 'xmlhttprequest' or 'ajax'");
+                                                    break;
+                                            }
                                         });
                                     })();
                                     step++;
                                     chrome.storage.local.get(null, function(attacks){
                                         if(_.size(attacks) >= requests.length){
-                                            httpFunctions.openNewWindow();
+                                            httpFunctions.openNewWindow('validate.html');
                                         }
                                     });
                                 }
                             });
                             break;
                         case "sync":
-                            chrome.storage.sync.clear(function(){
-                                console.log("Clearing chrome sync storage");
-                            });
+                            chrome.storage.sync.clear();
+                            console.log("Clearing chrome sync storage");
                             break;
                         default:
                             console.error("Background.js: Unable to determine storage type");
@@ -425,7 +464,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             }
             break;
         default:
-            console.log("Background.js: Can not handle request from "+ request.from + " script!!");
+            console.log("Background.js: Can not handle request from "+ message.from + " script!!");
             break;
     }
 });
@@ -464,6 +503,7 @@ chrome.runtime.onConnect.addListener(function(channel) {
                     }
                     break;
                 default:
+                    console.error("Background.js: Unable to handle message from '" + channel_name + "'")
                     break;
             }
         });
@@ -497,7 +537,6 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
                 });
                 headers = new_headers;
             }
-            console.log("Finished!!!")
 
         } catch(err) {
             //console.log(err);
