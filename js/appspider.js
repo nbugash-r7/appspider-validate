@@ -127,10 +127,28 @@ var AppSpider = {
             }
             return headers;
         },
-        convertJSONToString: function(json) {
+        convertJSONToString: function(jsonObj) {
             var str = "";
-            for(var key in json) {
-                str += key + ": " + json[key].trim() + "\r\n";
+            if (jsonObj.REQUEST) {
+                str = jsonObj.REQUEST.method + " " + jsonObj.REQUEST.uri + " " + jsonObj.REQUEST.version + "\r\n";
+            }
+            for (var key in jsonObj) {
+                if (jsonObj.hasOwnProperty(key)){
+                    switch(key){
+                        case "REQUEST":
+                            break; //skip
+                        case "Cookie":
+                            str += key +": " + JSON.stringify(jsonObj[key]);
+                            break;
+                        default:
+                            if (typeof jsonObj[key] === "object") {
+                                str += key + ": " + AppSpider.helper.convertJSONToString(jsonObj[key]);
+                            } else {
+                                str += key + ": " + jsonObj[key].trim() + "\r\n";
+                            }
+                            break;
+                    }
+                }
             }
             return str;
         }
@@ -146,7 +164,7 @@ chrome.storage.onChanged.addListener(function(attacks, namespace){
             namespace,
             attack_storage.oldValue,
             attack_storage.newValue);
-        $('textarea#attack-request-headers--'+attack_id).val(attack_storage.newValue.headers);
+        $('textarea#attack-request-headers-'+attack_id).val(AppSpider.helper.convertJSONToString(attack_storage.newValue.headers));
         $('textarea#attack-attack-request-payload-'+attack_id).val(attack_storage.newValue.payload);
         $('textarea#attack-response-headers-'+attack_id).val(attack_storage.newValue.response_headers);
         $('textarea#attack-response-content-'+attack_id).val(attack_storage.newValue.response_content);
