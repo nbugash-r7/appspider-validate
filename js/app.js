@@ -38,35 +38,7 @@ var Angular = {
                 appspider.attacks = attacks;
             };
             appspider.prettifyAttack = function(headers) {
-                var attack_str = "";
-                try {
-                    if (headers.REQUEST) {
-                        for (var key in headers.REQUEST) {
-                            attack_str += headers.REQUEST[key] + " "
-                        }
-                        attack_str += "\r\n";
-                    }
-                } catch (err) {
-                    console.error("App.js: Error handling headers.REQUEST");
-                    return;
-                }
-                for (var header in headers) {
-                    switch(header) {
-                        case "REQUEST":
-                            break;
-                        case "Cookie":
-                            var cookie_str = "";
-                            for(var key in headers[header]) {
-                                cookie_str += key + "=" + headers[header][key] + "; "
-                            }
-                            attack_str += header +": " + cookie_str + "\r\n";
-                            break;
-                        default:
-                            attack_str += header + ": " + headers[header] + "\r\n";
-                            break;
-                    }
-                }
-                return attack_str;
+                return AppSpider.helper.convertJSONToString(headers);
             };
             appspider.updateAttack = function(attack_id, attack_attr, content) {
                 AppSpider.attack.load(attack_id, function(attack){
@@ -192,11 +164,14 @@ var Angular = {
                         headers: headers,
                         data: attack.payload
                     }).then(function successRequest(response){
-                        console.log("Success!!");
-                        if (typeof response.headers() === "object") {
-                            attack.response_headers = AppSpider.helper.convertJSONToString(response.headers());
-                        } else {
-                            attack.response_headers = response.headers();
+                        console.log(response.statusText + ": Received response successfully!!");
+                        switch(typeof response.headers()){
+                            case "object":
+                                attack.response_headers = AppSpider.helper.convertJSONToString(response.headers());
+                                break;
+                            default:
+                                attack.response_headers = response.headers();
+                                break;
                         }
                         attack.response_content = response.data;
                         AppSpider.attack.save(attack_id, attack);

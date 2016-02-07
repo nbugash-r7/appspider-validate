@@ -70,7 +70,7 @@ var AppSpider = {
                 var channel = chrome.runtime.connect({name: "appspider.js"});
                 channel.postMessage({
                     type: "send_request",
-                    data: dataappspider
+                    data: data
                 });
 
                 /* Wait for asynchronous callback */
@@ -133,21 +133,19 @@ var AppSpider = {
                 str = jsonObj.REQUEST.method + " " + jsonObj.REQUEST.uri + " " + jsonObj.REQUEST.version + "\r\n";
             }
             for (var key in jsonObj) {
-                if (jsonObj.hasOwnProperty(key)){
-                    switch(key){
-                        case "REQUEST":
-                            break; //skip
-                        case "Cookie":
-                            str += key +": " + JSON.stringify(jsonObj[key]);
-                            break;
-                        default:
-                            if (typeof jsonObj[key] === "object") {
-                                str += key + ": " + AppSpider.helper.convertJSONToString(jsonObj[key]);
-                            } else {
-                                str += key + ": " + jsonObj[key].trim() + "\r\n";
-                            }
-                            break;
-                    }
+                switch(key){
+                    case "REQUEST":
+                        break; //skip
+                    case "Cookie":
+                        str += key +": " + JSON.stringify(jsonObj[key], null, '\t') + "\r\n";
+                        break;
+                    default:
+                        if (typeof jsonObj[key] === "object") {
+                            str += key + ": " + AppSpider.helper.convertJSONToString(jsonObj[key]);
+                        } else {
+                            str += key + ": " + jsonObj[key].trim() + "\r\n";
+                        }
+                        break;
                 }
             }
             return str;
