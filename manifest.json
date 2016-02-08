@@ -6,6 +6,7 @@
   "background": {
     "scripts": ["js/jquery-2.2.0.min.js",
                 "js/underscore-min.js",
+                "js/appspider.js",
                 "background.js"],
     "persistent": true
   },

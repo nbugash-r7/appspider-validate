@@ -28,7 +28,7 @@ var restrictedChromeHeaders = [
 var AppSpiderValidateApp = angular.module('AppSpiderValidateApp', []);
 var Angular = {
     controller: {
-        AttackController: function($scope, $http) {
+        AttackController: function($scope) {
             var appspider = this;
 
             AppSpider.attacks.getAllAttacks($scope, function(results){
@@ -94,24 +94,11 @@ var Angular = {
                 });
                 channel.onMessage.addListener(function(message){
                     if (message.from === "Background.js" && message.type === "currentStep" ) {
-                        chrome.tabs.create({
-                            url: chrome.extension.getURL('cookiepopup.html'),
-                            active: false
-                        }, function (tab) {
-                            // After the tab has been created, open a window to inject the tab
-                            chrome.windows.create({
-                                tabId: tab.id,
-                                type: 'popup',
-                                focused: true,
-                                width: 600,
-                                height: 435
-                                // incognito, top, left, ...
-                            }, function(window){
-                                chrome.windows.update(window.id,{
-                                    focused: true
-                                });
-                            });
-                        });
+                        /* Parameters:
+                        * (1) html page
+                        * (2) width
+                        * (3) height*/
+                        AppSpider.chrome.openNewWindow('cookiepopup.html',600, 435);
                     } else {
                         console.error("App.js: Unable to handle message from "
                             + message.from + " with message type: "+ message.type);
@@ -137,51 +124,54 @@ var Angular = {
                  */
                 AppSpider.attack.load($scope, attack_id, function(attack){
 
-                    var headers = {};
-                    for (var header in attack.headers) {
-                        if (attack.headers.hasOwnProperty(header)){
-                            if(_.contains(restrictedChromeHeaders, header.toUpperCase())){
-                                if (header === "Cookie") {
-                                    var cookie_str = "";
-                                    for(var key in attack.headers.Cookie) {
-                                        if(attack.headers.Cookie.hasOwnProperty(key)){
-                                            cookie_str += key + "=" + attack.headers.Cookie[key] + "; "
-                                        }
-                                    }
-                                    headers[token+header] = cookie_str;
-                                } else {
-                                    headers[token+header] = attack.headers[header];
-                                }
-                            } else {
-                                headers[header] = attack.headers[header];
+                    var headers = AppSpider.http.modifyHeaders(attack.headers);
+                    //for (var header in attack.headers) {
+                    //    if (attack.headers.hasOwnProperty(header)){
+                    //        if(_.contains(restrictedChromeHeaders, header.toUpperCase())){
+                    //            if (header === "Cookie") {
+                    //                var cookie_str = "";
+                    //                for(var key in attack.headers.Cookie) {
+                    //                    if(attack.headers.Cookie.hasOwnProperty(key)){
+                    //                        cookie_str += key + "=" + attack.headers.Cookie[key] + "; "
+                    //                    }
+                    //                }
+                    //                headers[token+header] = cookie_str;
+                    //            } else {
+                    //                headers[token+header] = attack.headers[header];
+                    //            }
+                    //        } else {
+                    //            headers[header] = attack.headers[header];
+                    //        }
+                    //    }
+                    //}
+
+                    if (typeof headers === "object") {
+                        $http({
+                            method: attack.headers.REQUEST.method,
+                            url: button.protocoltype + "://" + attack.headers.Host + attack.headers.REQUEST.uri,
+                            headers: headers,
+                            data: attack.payload
+                        }).then(function successRequest(response){
+                            console.log(response.statusText + ": Received response successfully!!");
+                            switch(typeof response.headers()){
+                                case "object":
+                                    attack.response_headers = AppSpider.helper.convertJSONToString(response.headers());
+                                    break;
+                                default:
+                                    attack.response_headers = response.headers();
+                                    break;
                             }
-                        }
+                            attack.response_content = response.data;
+                            AppSpider.attack.save(attack_id, attack);
+                        }, function errorRequest(response){
+                            attack.response_headers = "Error:\r\nUnable to obtain the response header for " +
+                                button.protocoltype.toLocaleLowerCase() + "://" + attack.headers.Host + attack.headers.REQUEST.uri;
+                            attack.response_content = "Error: Unable to obtain the response body";
+                            AppSpider.attack.save(attack_id, attack);
+                            console.error("App.js: Error - " + response);
+                        });
                     }
 
-                    $http({
-                        method: attack.headers.REQUEST.method,
-                        url: button.protocoltype + "://" + attack.headers.Host + attack.headers.REQUEST.uri,
-                        headers: headers,
-                        data: attack.payload
-                    }).then(function successRequest(response){
-                        console.log(response.statusText + ": Received response successfully!!");
-                        switch(typeof response.headers()){
-                            case "object":
-                                attack.response_headers = AppSpider.helper.convertJSONToString(response.headers());
-                                break;
-                            default:
-                                attack.response_headers = response.headers();
-                                break;
-                        }
-                        attack.response_content = response.data;
-                        AppSpider.attack.save(attack_id, attack);
-                    }, function errorRequest(response){
-                        attack.response_headers = "Error:\r\nUnable to obtain the response header for " +
-                            button.protocoltype.toLocaleLowerCase() + "://" + attack.headers.Host + attack.headers.REQUEST.uri;
-                        attack.response_content = "Error: Unable to obtain the response body";
-                        AppSpider.attack.save(attack_id, attack);
-                        console.error("App.js: Error - " + response);
-                    });
                 });
             };
             button.compare = function(attack_id){
@@ -210,7 +200,7 @@ var Angular = {
         }
     }
 };
-AppSpiderValidateApp.controller('AttackController', ['$scope','$http', Angular.controller.AttackController]);
+AppSpiderValidateApp.controller('AttackController', ['$scope', Angular.controller.AttackController]);
 AppSpiderValidateApp.controller('PanelController', [Angular.controller.PanelController]);
 AppSpiderValidateApp.controller('ButtonController', ['$scope','$http', Angular.controller.ButtonController]);
 AppSpiderValidateApp.directive('prettifyheader', [Angular.directive.prettifyheader]);
