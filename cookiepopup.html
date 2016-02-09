@@ -19,14 +19,27 @@
         </a>
     </div>
     <h3>Cookies</h3>
-    <div ng-repeat="(key, value) in cookieCtrl.cookies">
+    <div ng-repeat="(key, value) in cookieCtrl.cookies" >
         <div class="row">
             <div class="col-md-9">
                 <div class="input-group">
-                    <input type="text" class="form-control input-sm" value="{{key}}" aria-label="...">
+                    <input type="text" class="form-control input-sm"
+                           value="{{key}}" aria-label="..."/>
                     <span class="input-group-btn key-value-separator"></span>
-                    <input type="text" class="form-control input-sm cookie-value" value="{{value}}"aria-label="...">
+                    <input type="text" class="form-control input-sm cookie-value"
+                           value="{{value}}"aria-label="..."/>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-9">
+            <div class="input-group">
+                <input type="text" class="form-control input-sm" ng-model="key"
+                       aria-label="..." placeholder="Cookie key" />
+                <span class="input-group-btn key-value-separator"></span>
+                <input type="text" class="form-control input-sm cookie-value" ng-model="value"
+                       aria-label="..." placeholder="Cookie value" />
             </div>
         </div>
     </div>
@@ -34,8 +47,10 @@
         <div class="row">
             <div class="btn-group pull-right" role="group" aria-label="...">
                 <button class="btn btn-default clear-btn" id="clear-btn-{{cookieCtrl.id}}">Clear</button>
-                <button class="btn btn-default add-cookie-btn" id="add-cookie-btn-{{cookieCtrl.id}}">Add</button>
-                <button class="btn btn-default save-btn" id="save-cookie-{{cookieCtrl.id}}">Save</button>
+                <button class="btn btn-default add-cookie-btn" id="add-cookie-btn-{{cookieCtrl.id}}"
+                        ng-click="cookieCtrl.addCookies(key, value)">Add</button>
+                <button class="btn btn-default save-btn" id="save-cookie-{{cookieCtrl.id}}"
+                        ng-click="cookieCtrl.saveCookies(key, value)">Save</button>
             </div>
         </div>
     </div>

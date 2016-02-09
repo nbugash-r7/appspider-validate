@@ -1,29 +1,6 @@
 /**
  * Created by nbugash on 15/01/16.
  */
-var token = 'appspider-';
-var restrictedChromeHeaders = [
-    "ACCEPT-CHARSET",
-    "ACCEPT-ENCODING",
-    "ACCESS-CONTROL-REQUEST-HEADERS",
-    "ACCESS-CONTROL-REQUEST-METHOD",
-    "CONTENT-LENGTHNECTION",
-    "CONTENT-LENGTH",
-    "COOKIE",
-    "CONTENT-TRANSFER-ENCODING",
-    "DATE",
-    "EXPECT",
-    "HOST",
-    "KEEP-ALIVE",
-    "ORIGIN",
-    "REFERER",
-    "TE",
-    "TRAILER",
-    "TRANSFER-ENCODING",
-    "UPGRADE",
-    "USER-AGENT",
-    "VIA"
-];
 
 var AppSpiderValidateApp = angular.module('AppSpiderValidateApp', []);
 var Angular = {
@@ -125,25 +102,6 @@ var Angular = {
                 AppSpider.attack.load($scope, attack_id, function(attack){
 
                     var headers = AppSpider.http.modifyHeaders(attack.headers);
-                    //for (var header in attack.headers) {
-                    //    if (attack.headers.hasOwnProperty(header)){
-                    //        if(_.contains(restrictedChromeHeaders, header.toUpperCase())){
-                    //            if (header === "Cookie") {
-                    //                var cookie_str = "";
-                    //                for(var key in attack.headers.Cookie) {
-                    //                    if(attack.headers.Cookie.hasOwnProperty(key)){
-                    //                        cookie_str += key + "=" + attack.headers.Cookie[key] + "; "
-                    //                    }
-                    //                }
-                    //                headers[token+header] = cookie_str;
-                    //            } else {
-                    //                headers[token+header] = attack.headers[header];
-                    //            }
-                    //        } else {
-                    //            headers[header] = attack.headers[header];
-                    //        }
-                    //    }
-                    //}
 
                     if (typeof headers === "object") {
                         $http({

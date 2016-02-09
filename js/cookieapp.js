@@ -18,17 +18,24 @@ var Angular = {
                     });
                 }
             });
-
-            attack.saveCookies = function() {
-                AppSpider.attack.load(attack.id, function(attack){
-                    attack.headers.Cookie = attack.cookies;
-                    AppSpider.attack.save(attack.id, attack);
-                    console.log("Cookie saved!!");
+            attack.saveCookies = function(key, value) {
+                if(key && value) {
+                    attack.cookies[key] = value;
+                }
+                AppSpider.attack.load($scope, attack.id,function(retrieved_attack){
+                    retrieved_attack.headers.Cookie = attack.cookies;
+                    AppSpider.attack.save(attack.id,retrieved_attack);
+                    window.close();
                 });
             };
             attack.getCookies = function(){
                 return attack.cookies;
             };
+            attack.addCookies = function(key, value) {
+                attack.cookies[key] = value;
+                $scope.key = null;
+                $scope.value = null;
+            }
         }
     }
 };
