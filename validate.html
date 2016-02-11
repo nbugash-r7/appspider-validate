@@ -80,7 +80,7 @@
                                         </div>
                                     </div>
                                     <div ng-repeat="(header_key, header_value) in attack.headers" class="container header-pair">
-                                        <div class="row header-pair">
+                                        <div class="row header-pair" ng-hide="panel.hideHeader(header_key)">
                                             <div class="col-xs-3 header-key">
                                                 <input type="text" class="form-control" value="{{header_key}}">
                                             </div>

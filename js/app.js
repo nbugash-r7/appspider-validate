@@ -45,7 +45,13 @@ var Angular = {
                 return panel.tab === checkTab;
             };
             panel.hideHeader = function(header) {
-                return header.match(new RegExp("REQUEST|Cookie"));
+                if (header === "REQUEST") {
+                    return true;
+                } else if (header === "Cookie") {
+                    return true;
+                } else {
+                    return false;
+                }
             }
         },
         ButtonController: function($scope, $http) {
