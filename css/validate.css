@@ -16,13 +16,13 @@ body {
 #main-wrapper {
     height: 100%;
     overflow-y: auto;
-    padding: 0px 0 0px 0;
+    padding: 0px 0 120px 0;
 }
 #main {
     position: relative;
     height: 100%;
     overflow-y: auto;
-    padding: 0 15px 100px;
+    padding: 0 15px 0px;
 }
 #sidebar-wrapper {
     height: 100%;

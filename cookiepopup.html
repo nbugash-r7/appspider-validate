@@ -30,7 +30,8 @@
                     <input type="text" class="form-control input-sm cookie-value" ng-model="value"
                            ng-blur="cookieCtrl.updateCookie(key, value)" aria-label="..."/>
                     <span class="input-group-btn key-value-separator"></span>
-                    <a href="#" class="form-control remove-cookie-pair" ng-click="removeKeyValuePair(key)">Remove</a>
+                    <a href="#" class="form-control remove-cookie-pair" ng-click="removeKeyValuePair(key)">
+                        <span class="glyphicon glyphicon-trash"></span></a>
                 </div>
             </div>
         </div>
@@ -44,7 +45,9 @@
                 <input type="text" class="form-control input-sm cookie-value" ng-model="value"
                        aria-label="..." placeholder="Cookie value" />
                 <span class="input-group-btn key-value-separator"></span>
-                <a href="#" class="form-control remove-cookie-pair">Remove</a>
+                <a href="#" class="form-control remove-cookie-pair">
+                    <span class="glyphicon glyphicon-trash"></span>
+                </a>
             </div>
         </div>
     </div>
