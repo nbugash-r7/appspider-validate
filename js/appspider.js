@@ -375,7 +375,12 @@ var AppSpider = {
 
     }
 };
+/* JQUERY */
+$(document).ready(function(){
+	$('[data-toggle="tooltip"]').tooltip();
+});
 
+/* CHROME API */
 chrome.storage.onChanged.addListener(function(attacks, namespace){
     for (var attack_id in attacks) {
         var attack_storage = attacks[attack_id];

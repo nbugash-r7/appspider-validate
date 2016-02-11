@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="AppSpiderValidateApp">
+<html lang="en" ng-app="AppSpiderValidateApp" xmlns="http://www.w3.org/1999/html">
 <head>
-    <meta charset="UTF-8">
     <title>Appspider Validate</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link type="text/css" rel="stylesheet" href="css/bootstrap.min.css">
     <link type="text/css" rel="stylesheet" href="css/validate.css">
     <script type="text/javascript" src="js/jquery-2.2.0.min.js"></script>
@@ -56,8 +57,8 @@
                                               ng-model="attack.headers" prettifyheader readonly></textarea>
                                 </div>
                                 <div class="prettify" ng-show="true">
-                                    <div class="row">
-                                        <div class="col-md-9">
+                                    <div class="row header-spacing">
+                                        <div class="col-lg-12">
                                             <div class="input-group">
                                                 <div class="input-group-btn">
                                                     <button class="btn btn-default dropdown-toggle prettify" data-toggle="dropdown"
@@ -71,24 +72,28 @@
                                                 <input type="text" class="form-control" aria-label="..."
                                                        value="{{attack.headers.Host}}{{attack.headers.REQUEST.uri}}"/>
                                                 <span class="input-group-btn"></span>
-                                                <input type="button" class="btn btn-success form-control" aria-label="..." value="Add Header"/>
-                                                </input>
+                                                <a type="button" class="btn btn-success form-control" aria-label="..."
+                                                       value="+" data-toggle="tooltip" data-placement="right" title="Add new header">
+                                                    <span class="glyphicon glyphicon-plus"></span>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
-                                    <div ng-repeat="(header_key, header_value) in attack.headers">
-                                        <div class="row">
-                                            <div class="col-md-9">
-                                                <div class="input-group header-pair">
-                                                    <input type="text" class="form-control header-key" value="{{header_key}}">
-                                                    <span class="input-group-btn"></span>
-                                                    <input type="text" class="form-control header-value" value="{{header_value}}">
-                                                    <span class="input-group-btn"></span>
-                                                    <a href="#" class="form-control remove-header-btn">Remove</a>
-                                                </div>
+                                    <div ng-repeat="(header_key, header_value) in attack.headers" class="container header-pair">
+                                        <div class="row header-pair">
+                                            <div class="col-xs-3 header-key">
+                                                <input type="text" class="form-control" value="{{header_key}}">
+                                            </div>
+                                            <div class="col-xs-8 header-value">
+                                                <input type="text" class="form-control" value="{{header_value}}">
+                                            </div>
+                                            <div class="col-xs-1 remove-header-btn">
+                                                <a href="#" type="button" class="form-control btn-danger"
+                                                   title="Remove header" data-toggle="tooltip">
+                                                    <span class="glyphicon glyphicon-minus"></span>
+                                                </a>
                                             </div>
                                         </div>
-
                                     </div>
                                 </div>
                                 <textarea name="attack-request-payload-input" id="attack-request-payload-{{attack_id}}"

@@ -120,16 +120,39 @@ label {
 button.dropdown-toggle.prettify {
     height: 34px;
 }
-div.input-group.header-pair {
+div.header-pair {
+    padding-top: 3px;
+}
+div.header-key {
+    padding-right: 0;
+}
+div.header-value {
+    padding: 0 5px 0 ;
+}
+div.remove-header-btn {
+     padding: 0 0 0;
+ }
+div.header-key input {
+    height: 24px;
+    font-size: 12px;
+}
+div.header-value input {
+    height: 24px;
+    font-size: 12px;
+}
+div.remove-header-btn a {
+    height: 24px;
+    font-size: 10px;
+    text-align: center;
+    text-decoration: none;
+}
+div.header-spacing {
+    padding: 0 0 10px 0;
+}
+div.container.header-pair {
+    padding-left: 0;
+    margin-left: 0;
+    margin-right: 18px;
     width: 100%;
-    height: 23px;
-}
-input.header-key {
-    height: 23px;
-}
-input.header-value {
-    height: 23px;
-}
-a.remove-header-btn {
-    height: 23px;
+    padding-right: 15px;
 }
