@@ -44,6 +44,9 @@ var Angular = {
             panel.isSelected = function (checkTab) {
                 return panel.tab === checkTab;
             };
+            panel.hideHeader = function(header) {
+                return header.match(new RegExp("REQUEST|Cookie"));
+            }
         },
         ButtonController: function($scope, $http) {
             var button = this;
@@ -135,6 +138,9 @@ var Angular = {
             button.compare = function(attack_id){
                 console.log("Compare button clicked attack id: " + attack_id);
             };
+            button.isSelectedView = function(view) {
+                return button.view === view;
+            }
         }
     },
     directive: {
