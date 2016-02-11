@@ -16,12 +16,9 @@
 <div class="container" ng-controller="AttackController as appspider">
     <div id="header" class="navbar navbar-default navbar-fixed-top">
         <div class="navbar-header">
-            <button class="navbar-toggle collapsed">
-
-            </button>
+            <button class="navbar-toggle collapsed"></button>
             <a href="#" class="navbar-brand">
-                <img id="appspider-logo" src="img/logo.png"
-                     alt="AppSpider Validate Logo">
+                <img id="appspider-logo" src="img/logo.png" alt="AppSpider Validate Logo">
             </a>
         </div>
         <nav class="collapse navbar-collapse">
@@ -53,13 +50,46 @@
                         <div class="panel" ng-show="panel.isSelected(attack_id)">
                             <div class="form-group">
                                 <label for="attack-request-headers-{{attack_id}}">Attack request</label>
-                                <div class="raw">
+                                <div class="raw" ng-show="false">
                                     <textarea name="attack-request-header-input" id="attack-request-headers-{{attack_id}}"
                                               cols="30" rows="10" class="form-control attack-request-headers"
                                               ng-model="attack.headers" prettifyheader readonly></textarea>
                                 </div>
-                                <div class="prettify">
+                                <div class="prettify" ng-show="true">
+                                    <div class="row">
+                                        <div class="col-md-9">
+                                            <div class="input-group">
+                                                <div class="input-group-btn">
+                                                    <button class="btn btn-default dropdown-toggle prettify" data-toggle="dropdown"
+                                                            aria-haspopup="true" aria-expanded="false">GET <span class="caret"></span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a href="#">GET</a></li>
+                                                        <li><a href="#">POST</a></li>
+                                                    </ul>
+                                                </div>
+                                                <input type="text" class="form-control" aria-label="..."
+                                                       value="{{attack.headers.Host}}{{attack.headers.REQUEST.uri}}"/>
+                                                <span class="input-group-btn"></span>
+                                                <input type="button" class="btn btn-success form-control" aria-label="..." value="Add Header"/>
+                                                </input>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div ng-repeat="(header_key, header_value) in attack.headers">
+                                        <div class="row">
+                                            <div class="col-md-9">
+                                                <div class="input-group header-pair">
+                                                    <input type="text" class="form-control header-key" value="{{header_key}}">
+                                                    <span class="input-group-btn"></span>
+                                                    <input type="text" class="form-control header-value" value="{{header_value}}">
+                                                    <span class="input-group-btn"></span>
+                                                    <a href="#" class="form-control remove-header-btn">Remove</a>
+                                                </div>
+                                            </div>
+                                        </div>
 
+                                    </div>
                                 </div>
                                 <textarea name="attack-request-payload-input" id="attack-request-payload-{{attack_id}}"
                                           cols="15" rows="10" class="form-control attack-request-payload" ng-model="attack.payload"

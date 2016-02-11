@@ -7,7 +7,7 @@ var Angular = {
     controller: {
         AttackController: function($scope) {
             var appspider = this;
-
+            appspider.view = 'RAW';
             AppSpider.attacks.getAllAttacks($scope, function(results){
                 appspider.getAttacks(results);
             });

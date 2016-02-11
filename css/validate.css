@@ -117,3 +117,19 @@ label {
     margin-top: 5px;
 }
 
+button.dropdown-toggle.prettify {
+    height: 34px;
+}
+div.input-group.header-pair {
+    width: 100%;
+    height: 23px;
+}
+input.header-key {
+    height: 23px;
+}
+input.header-value {
+    height: 23px;
+}
+a.remove-header-btn {
+    height: 23px;
+}
