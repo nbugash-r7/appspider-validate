@@ -62,11 +62,11 @@
                                             <div class="input-group">
                                                 <div class="input-group-btn">
                                                     <button class="btn btn-default dropdown-toggle prettify" data-toggle="dropdown"
-                                                            aria-haspopup="true" aria-expanded="false">GET <span class="caret"></span>
+                                                            aria-haspopup="true" aria-expanded="false">{{attack.headers.REQUEST.method}} <span class="caret"></span>
                                                     </button>
                                                     <ul class="dropdown-menu">
-                                                        <li><a href="#">GET</a></li>
-                                                        <li><a href="#">POST</a></li>
+                                                        <li><a ng-click="button.attackRequestDropdown('GET')" href="#">GET</a></li>
+                                                        <li><a ng-click="button.attackRequestDropdown('POST')" href="#">POST</a></li>
                                                     </ul>
                                                 </div>
                                                 <input type="text" class="form-control" aria-label="..."
@@ -80,7 +80,7 @@
                                         </div>
                                     </div>
                                     <div ng-repeat="(header_key, header_value) in attack.headers" class="container header-pair">
-                                        <div class="row header-pair" ng-hide="panel.hideHeader(header_key)">
+                                        <div class="row header-pair" ng-hide="panel.hideHeader(header_key)" remove-on-click>
                                             <div class="col-xs-3 header-key">
                                                 <input type="text" class="form-control" value="{{header_key}}">
                                             </div>

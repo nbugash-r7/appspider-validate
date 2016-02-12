@@ -58,6 +58,10 @@ var Angular = {
             var button = this;
             button.view = 'RAW';
             button.protocoltype = 'HTTP';
+            button.request_type = 'GET';
+            button.attackRequestDropdown = function(method) {
+                button.request_type = method;
+            };
             button.viewDropdown = function(attack_id, viewtype){
                 console.log("View dropdown clicked with value " + viewtype + " on attack id: " + attack_id);
                 button.view = viewtype;
@@ -167,6 +171,17 @@ var Angular = {
                     });
                 }
             }
+        },
+        removeOnClick: function(){
+            return {
+                link: function(scope, elt, attributes) {
+                    scope.removeKeyValuePair = function(){
+                        console.log(scope);
+                        console.log(elt);
+                        console.log(attributes);
+                    }
+                }
+            }
         }
     }
 };
@@ -174,3 +189,4 @@ AppSpiderValidateApp.controller('AttackController', ['$scope', Angular.controlle
 AppSpiderValidateApp.controller('PanelController', [Angular.controller.PanelController]);
 AppSpiderValidateApp.controller('ButtonController', ['$scope','$http', Angular.controller.ButtonController]);
 AppSpiderValidateApp.directive('prettifyheader', [Angular.directive.prettifyheader]);
+AppSpiderValidateApp.directive('removeOnClick', [Angular.directive.removeOnClick]);
