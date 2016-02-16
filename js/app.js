@@ -34,7 +34,12 @@ var Angular = {
                     AppSpider.attack.save(attack_id, new_attack);
                 });
             };
-            appspider.updateAttackHeader = function(attack, header_key, header_value) {
+            appspider.updateAttackHeader = function(attack, old_header_key, header_key, header_value) {
+                attack.headers[header_key] = header_value;
+                delete attack.headers[old_header_key];
+                AppSpider.attack.save(attack.id,attack);
+            };
+            appspider.AddAttackHeader = function(attack, header_key, header_value) {
                 attack.headers[header_key] = header_value;
                 AppSpider.attack.save(attack.id,attack);
             }
@@ -65,7 +70,7 @@ var Angular = {
             button.protocoltype = 'HTTP';
             button.request_type = 'GET';
             button.attackRequestDropdown = function(method) {
-                button.request_type = method;
+                $scope.$parent.attack.headers.REQUEST.method = method;
             };
             button.viewDropdown = function(attack_id, viewtype){
                 console.log("View dropdown clicked with value " + viewtype + " on attack id: " + attack_id);
@@ -189,6 +194,18 @@ var Angular = {
                     }
                 }
             }
+        },
+        parseRequestHeader: function() {
+            return {
+                link: function(scope, elt, attributes) {
+                    scope.parseRequestHeader = function() {
+                        var url_string = elt.val();
+                        console.log(scope);
+                        console.log(elt);
+                        console.log(attributes);
+                    }
+                }
+            }
         }
     }
 };
@@ -197,3 +214,4 @@ AppSpiderValidateApp.controller('PanelController', [Angular.controller.PanelCont
 AppSpiderValidateApp.controller('ButtonController', ['$scope','$http', Angular.controller.ButtonController]);
 AppSpiderValidateApp.directive('prettifyheader', [Angular.directive.prettifyheader]);
 AppSpiderValidateApp.directive('removeHeader', [Angular.directive.removeHeader]);
+AppSpiderValidateApp.directive('parseRequestHeader', [Angular.directive.parseRequestHeader]);

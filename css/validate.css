@@ -132,6 +132,10 @@ div.header-value {
 div.remove-header-btn {
      padding: 0 0 0;
  }
+
+div.add-header-btn {
+    padding: 0 0 0;
+}
 div.header-key input {
     height: 24px;
     font-size: 12px;
@@ -141,6 +145,13 @@ div.header-value input {
     font-size: 12px;
 }
 div.remove-header-btn a {
+    height: 24px;
+    font-size: 10px;
+    text-align: center;
+    text-decoration: none;
+}
+
+div.add-header-btn a {
     height: 24px;
     font-size: 10px;
     text-align: center;

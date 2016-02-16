@@ -69,13 +69,9 @@
                                                         <li><a ng-click="button.attackRequestDropdown('POST')" href="#">POST</a></li>
                                                     </ul>
                                                 </div>
-                                                <input type="text" class="form-control" aria-label="..."
-                                                       value="{{attack.headers.Host}}{{attack.headers.REQUEST.uri}}"/>
-                                                <span class="input-group-btn"></span>
-                                                <a type="button" class="btn btn-success form-control" aria-label="..."
-                                                       value="+" data-toggle="tooltip" data-placement="right" title="Add new header">
-                                                    <span class="glyphicon glyphicon-plus-sign"></span>
-                                                </a>
+                                                <input type="text" class="form-control" aria-label="..." parse-request-header
+                                                       value="{{attack.headers.Host}}{{attack.headers.REQUEST.uri}}"
+                                                       ng-blur="parseRequestHeader()"/>
                                             </div>
                                         </div>
                                     </div>
@@ -93,6 +89,22 @@
                                                 <a href="#" type="button" class="form-control btn-danger"
                                                    title="Remove header" data-toggle="tooltip" ng-click="removeHeader(header_key)">
                                                     <span class="glyphicon glyphicon-trash"></span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="container header-pair">
+                                        <div class="row header-pair" ng-model="new_header">
+                                            <div class="col-xs-3 header-key">
+                                                <input type="text" class="form-control" ng-model="new_header.key">
+                                            </div>
+                                            <div class="col-xs-8 header-value">
+                                                <input type="text" class="form-control" ng-model="new_header.value">
+                                            </div>
+                                            <div class="col-xs-1 add-header-btn">
+                                                <a href="#" type="button" class="form-control btn-success"
+                                                   title="Add header" data-toggle="tooltip" ng-click="appspider.AddAttackHeader(attack, new_header.key, new_header.value)">
+                                                    <span class="glyphicon glyphicon-plus-sign"></span>
                                                 </a>
                                             </div>
                                         </div>
