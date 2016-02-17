@@ -126,6 +126,11 @@ div.header-pair {
 div.header-key {
     padding-right: 0;
 }
+label.header-key {
+    padding-right: 0;
+    height: 24px;
+    font-size: 12px;
+}
 div.header-value {
     padding: 0 5px 0 ;
 }

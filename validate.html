@@ -10,8 +10,10 @@
     <script type="text/javascript" src="js/bootstrap.min.js"></script>
     <script type="text/javascript" src="js/angular.min.js"></script>
     <script type="text/javascript" src="js/underscore-min.js"></script>
+    <script type="text/javascript" src="js/animatescroll.min.js"></script>
     <script type="text/javascript" src="js/appspider.js"></script>
     <script type="text/javascript" src="js/app.js"></script>
+    <script type="text/javascript" src="js/scroll.js"></script>
 </head>
 <body ng-controller="PanelController as panel">
 <div class="container" ng-controller="AttackController as appspider">
@@ -34,10 +36,10 @@
         <div id="sidebar-wrapper" class="col-sm-2">
             <div id="sidebar">
                 <ul class="nav list-group">
-                    <li><a href="#" class="list-group-item">Attack Request</a></li>
-                    <li><a href="#" class="list-group-item">Payload</a></li>
-                    <li><a href="#" class="list-group-item">Attack Response</a></li>
-                    <li><a href="#" class="list-group-item">Content</a></li>
+                    <li><a href="#" class="list-group-item go-to-attack-request">Attack Request</a></li>
+                    <li><a href="#" class="list-group-item go-to-attack-payload">Payload</a></li>
+                    <li><a href="#" class="list-group-item go-to-attack-response">Attack Response</a></li>
+                    <li><a href="#" class="list-group-item go-to-attack-content">Content</a></li>
                 </ul>
             </div>
         </div>
@@ -50,9 +52,11 @@
                     <section ng-model="attack" ng-controller="ButtonController as button">
                         <div class="panel" ng-show="panel.isSelected(attack_id)">
                             <div class="form-group">
-                                <label for="attack-request-headers-{{attack_id}}">Attack request</label>
+                                <label>
+                                    <h4 class="attack-request-title">Attack request</h4>
+                                </label>
                                 <div class="raw" ng-show="button.isSelectedView('RAW')">
-                                    <textarea name="attack-request-header-input" id="attack-request-headers-{{attack_id}}"
+                                    <textarea name="attack-request-header-input" title="attack-request-headers-{{attack_id}}"
                                               cols="30" rows="10" class="form-control attack-request-headers"
                                               ng-model="attack.headers" prettifyheader readonly></textarea>
                                 </div>
@@ -70,20 +74,29 @@
                                                     </ul>
                                                 </div>
                                                 <input type="text" class="form-control" aria-label="..." parse-request-header
-                                                       value="{{attack.headers.Host}}{{attack.headers.REQUEST.uri}}"
+                                                       value="{{button.protocoltype.toLocaleLowerCase()}}://{{attack.headers.Host}}{{attack.headers.REQUEST.uri}}"
                                                        ng-blur="parseRequestHeader()"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="container header-pair">
+                                        <div class="row header-pair">
+                                            <div class="col-xs-2 header-key">
+                                                <label>Header</label>
+                                            </div>
+                                            <div class="col-xs-9 header-value">
+                                                <label>Value</label>
                                             </div>
                                         </div>
                                     </div>
                                     <div ng-repeat="(header_key, header_value) in attack.headers" class="container header-pair" ng-model="attack.headers">
                                         <div class="row header-pair" ng-hide="panel.hideHeader(header_key)" remove-on-click>
-                                            <div class="col-xs-3 header-key">
-                                                <input type="text" class="form-control" ng-model="header_key"
-                                                       ng-blur="appspider.updateAttackHeader(attack, header_key, header_value)">
+                                            <div class="col-xs-2 header-key">
+                                                <label for="attack-header-{{attack_id}}" class="header-key">{{header_key}}</label>
                                             </div>
-                                            <div class="col-xs-8 header-value">
-                                                <input type="text" class="form-control" ng-model="header_value"
-                                                       ng-blur="appspider.updateAttackHeader(attack, header_key, header_value)">
+                                            <div class="col-xs-9 header-value">
+                                                <input id="attack-header-{{attack_id}}" type="text" class="form-control" ng-model="header_value"
+                                                       ng-change="appspider.updateAttackHeader(attack, header_key, header_value)">
                                             </div>
                                             <div class="col-xs-1 remove-header-btn">
                                                 <a href="#" type="button" class="form-control btn-danger"
@@ -95,22 +108,22 @@
                                     </div>
                                     <div class="container header-pair">
                                         <div class="row header-pair" ng-model="new_header">
-                                            <div class="col-xs-3 header-key">
+                                            <div class="col-xs-2 header-key">
                                                 <input type="text" class="form-control" ng-model="new_header.key">
                                             </div>
-                                            <div class="col-xs-8 header-value">
+                                            <div class="col-xs-9 header-value">
                                                 <input type="text" class="form-control" ng-model="new_header.value">
                                             </div>
                                             <div class="col-xs-1 add-header-btn">
                                                 <a href="#" type="button" class="form-control btn-success"
-                                                   title="Add header" data-toggle="tooltip" ng-click="appspider.AddAttackHeader(attack, new_header.key, new_header.value)">
+                                                   title="Add header" data-toggle="tooltip" ng-click="appspider.addAttackHeader(attack, new_header.key, new_header.value)">
                                                     <span class="glyphicon glyphicon-plus-sign"></span>
                                                 </a>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <textarea name="attack-request-payload-input" id="attack-request-payload-{{attack_id}}"
+                                <textarea name="attack-request-payload-input" title="attack-request-payload-{{attack_id}}"
                                           cols="15" rows="10" class="form-control attack-request-payload" ng-model="attack.payload"
                                           ng-change="appspider.updateAttack(attack_id, 'payload', attack.payload)"></textarea>
                                 <div class="container-fluid appspider-btn">
@@ -169,10 +182,13 @@
 
                                     </div>
                                 </div>
-                                <label for="attack-response-headers-{{attack_id}}">Attack response</label>
-                                <textarea name="attack-response-header-input" id="attack-response-headers-{{attack_id}}"
-                                          cols="30" rows="10" class="form-control attack-response-headers" readonly
-                                          ng-model="attack.response_headers"></textarea>
+                                <label>
+                                    <h4>Attack response</h4>
+                                </label>
+                                <textarea name="attack-response-header-input" title="attack-response-headers-{{attack_id}}"
+                                          id="attack-response-headers-{{attack_id}}" cols="30" rows="10"
+                                          class="form-control attack-response-headers" readonly ng-model="attack.response_headers">
+                                </textarea>
                                 <textarea name="attack-response-content-input" id="attack-response-content-{{attack_id}}"
                                           cols="30" rows="10" class="form-control attack-response-content"
                                           ng-model="attack.response_content" readonly

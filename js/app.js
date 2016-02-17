@@ -34,14 +34,15 @@ var Angular = {
                     AppSpider.attack.save(attack_id, new_attack);
                 });
             };
-            appspider.updateAttackHeader = function(attack, old_header_key, header_key, header_value) {
+            appspider.updateAttackHeader = function(attack, header_key, header_value) {
                 attack.headers[header_key] = header_value;
-                delete attack.headers[old_header_key];
                 AppSpider.attack.save(attack.id,attack);
             };
-            appspider.AddAttackHeader = function(attack, header_key, header_value) {
-                attack.headers[header_key] = header_value;
-                AppSpider.attack.save(attack.id,attack);
+            appspider.addAttackHeader = function(attack, header_key, header_value) {
+                if(header_key.trim() != "") {
+                    attack.headers[header_key] = header_value;
+                    AppSpider.attack.save(attack.id,attack);
+                }
             }
         },
         PanelController: function() {
@@ -188,9 +189,6 @@ var Angular = {
                 link: function(scope, elt, attributes) {
                     scope.removeHeader = function(key){
                         delete scope.attack.headers[key];
-                        /* Save changes to the chrome local storage */
-                        AppSpider.attack.save(scope.attack.id, scope.attack);
-                        console.log("Attack "+ scope.attack.id + " saved to chrome storage!");
                     }
                 }
             }
@@ -200,9 +198,10 @@ var Angular = {
                 link: function(scope, elt, attributes) {
                     scope.parseRequestHeader = function() {
                         var url_string = elt.val();
-                        console.log(scope);
-                        console.log(elt);
-                        console.log(attributes);
+                        var url = document.createElement('a');
+                        url.href = url_string;
+                        console.log(url.protocol);
+                        console.log(url.host);
                     }
                 }
             }
