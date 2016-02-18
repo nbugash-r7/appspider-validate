@@ -38,6 +38,10 @@ var Angular = {
                 attack.headers[header_key] = header_value;
                 AppSpider.attack.save(attack.id,attack);
             };
+            appspider.removeAttackHeader = function(attack, header_key) {
+                delete attack.headers[header_key];
+                AppSpider.attack.save(attack.id,attack);
+            };
             appspider.addAttackHeader = function(attack, header_key, header_value) {
                 if(header_key.trim() != "") {
                     attack.headers[header_key] = header_value;
@@ -181,15 +185,6 @@ var Angular = {
                         var attackController = new Angular.controller.AttackController(scope);
                         return attackController.prettifyAttack(data);
                     });
-                }
-            }
-        },
-        removeHeader: function(){
-            return {
-                link: function(scope, elt, attributes) {
-                    scope.removeHeader = function(key){
-                        delete scope.attack.headers[key];
-                    }
                 }
             }
         },

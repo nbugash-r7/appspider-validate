@@ -57,8 +57,9 @@
                                 </label>
                                 <div class="raw" ng-show="button.isSelectedView('RAW')">
                                     <textarea name="attack-request-header-input" title="attack-request-headers-{{attack_id}}"
-                                              cols="30" rows="10" class="form-control attack-request-headers"
-                                              ng-model="attack.headers" prettifyheader readonly></textarea>
+                                              id="attack-request-headers-{{attack_id}}" cols="30" rows="10"
+                                              class="form-control attack-request-headers" ng-model="attack.headers"
+                                              prettifyheader readonly></textarea>
                                 </div>
                                 <div class="prettify" ng-show="button.isSelectedView('Prettify')">
                                     <div class="row header-spacing">
@@ -90,7 +91,7 @@
                                         </div>
                                     </div>
                                     <div ng-repeat="(header_key, header_value) in attack.headers" class="container header-pair" ng-model="attack.headers">
-                                        <div class="row header-pair" ng-hide="panel.hideHeader(header_key)" remove-on-click>
+                                        <div class="row header-pair" ng-hide="panel.hideHeader(header_key)">
                                             <div class="col-xs-2 header-key">
                                                 <label for="attack-header-{{attack_id}}" class="header-key">{{header_key}}</label>
                                             </div>
@@ -100,7 +101,7 @@
                                             </div>
                                             <div class="col-xs-1 remove-header-btn">
                                                 <a href="#" type="button" class="form-control btn-danger"
-                                                   title="Remove header" data-toggle="tooltip" ng-click="removeHeader(header_key)">
+                                                   title="Remove header" data-toggle="tooltip" ng-click="appspider.removeAttackHeader(attack, header_key)">
                                                     <span class="glyphicon glyphicon-trash"></span>
                                                 </a>
                                             </div>
