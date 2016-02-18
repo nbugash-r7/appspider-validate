@@ -7,7 +7,7 @@ var Angular = {
     controller: {
         AttackController: function($scope) {
             var appspider = this;
-            appspider.view = 'RAW';
+            appspider.view = 'Prettify';
 
             AppSpider.attacks.getAllAttacks($scope, function(results){
                 appspider.getAttacks(results);
@@ -52,7 +52,7 @@ var Angular = {
         PanelController: function() {
             var panel = this;
             panel.tab = "1";
-            panel.view = "RAW";
+            panel.view = "Prettify";
             panel.selectTab = function (setTab) {
                 panel.tab = setTab;
             };
@@ -71,11 +71,12 @@ var Angular = {
         },
         ButtonController: function($scope, $http) {
             var button = this;
-            button.view = 'RAW';
+            button.view = 'Prettify';
             button.protocoltype = 'HTTP';
             button.request_type = 'GET';
             button.attackRequestDropdown = function(method) {
-                $scope.$parent.attack.headers.REQUEST.method = method;
+                $scope.attack.headers.REQUEST.method = method;
+                AppSpider.attack.save($scope.attack.id, $scope.attack);
             };
             button.viewDropdown = function(attack_id, viewtype){
                 console.log("View dropdown clicked with value " + viewtype + " on attack id: " + attack_id);
@@ -195,8 +196,9 @@ var Angular = {
                         var url_string = elt.val();
                         var url = document.createElement('a');
                         url.href = url_string;
-                        console.log(url.protocol);
-                        console.log(url.host);
+                        this.attack.headers.REQUEST.uri = url.pathname;
+                        this.attack.headers.Host = url.host;
+                        AppSpider.attack.save(this.attack.id, this.attack);
                     }
                 }
             }

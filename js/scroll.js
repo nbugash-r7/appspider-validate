@@ -1,7 +1,7 @@
 /**
  * Created by nbugash on 17/02/16.
  */
-$("a.go-to-attack-request")
+$("#go-to-attack-request")
 	.click(function(){
 		console.log("This was click");
 		//$('.attack-request-title').animatescroll({

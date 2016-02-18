@@ -36,7 +36,7 @@
         <div id="sidebar-wrapper" class="col-sm-2">
             <div id="sidebar">
                 <ul class="nav list-group">
-                    <li><a href="#" class="list-group-item go-to-attack-request">Attack Request</a></li>
+                    <li><a href="#" class="list-group-item" id="go-to-attack-request">Attack Request</a></li>
                     <li><a href="#" class="list-group-item go-to-attack-payload">Payload</a></li>
                     <li><a href="#" class="list-group-item go-to-attack-response">Attack Response</a></li>
                     <li><a href="#" class="list-group-item go-to-attack-content">Content</a></li>
@@ -107,6 +107,18 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="container header-pair" ng-hide="true">
+                                        <div class="row header-pair">
+                                            <div class="col-xs-2 header-key">
+                                                <label for="attack-header-cookies-{{attack_id}}" class="header-key">Cookies</label>
+                                            </div>
+                                            <div class="col-xs-9 header-value">
+                                                <textarea name="attack-header-cookies-{{attack_id}}" id="attack-header-cookies-{{attack_id}}"
+                                                          class="form-control attack-header-cookies" cols="30" rows="10"
+                                                          ng-model="attack.headers.Cookie" readonly prettifyheader=""></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="container header-pair">
                                         <div class="row header-pair" ng-model="new_header">
                                             <div class="col-xs-2 header-key">
@@ -139,9 +151,9 @@
                                             </button>
                                             <ul class="dropdown-menu">
                                                 <li><a ng-click="button.viewDropdown(attack_id, 'RAW')"
-                                                       href="#">Raw</a></li>
+                                                       href="#">Raw (readonly)</a></li>
                                                 <li><a ng-click="button.viewDropdown(attack_id, 'Prettify')"
-                                                       href="#">Prettify</a></li>
+                                                       href="#">Prettify (editable)</a></li>
                                             </ul>
                                         </div>
                                         <label class='protocol-lbl'>Protocol:</label>
@@ -184,7 +196,7 @@
                                     </div>
                                 </div>
                                 <label>
-                                    <h4>Attack response</h4>
+                                    <h4 class="attack-response-title">Attack response</h4>
                                 </label>
                                 <textarea name="attack-response-header-input" title="attack-response-headers-{{attack_id}}"
                                           id="attack-response-headers-{{attack_id}}" cols="30" rows="10"
@@ -217,7 +229,9 @@
         <ul class="nav navbar-nav">
             <li><a href="#">Help</a></li>
             <li><a href="#">About AppSpider</a></li>
-            <li><a href="#">Contact Us</a></li>
+            <li>
+                <a href="#">Contact Us <span class="glyphicon glyphicon-envelope"></span></a>
+            </li>
         </ul>
     </div>
 </div>
