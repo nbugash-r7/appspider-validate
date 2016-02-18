@@ -209,5 +209,4 @@ AppSpiderValidateApp.controller('AttackController', ['$scope', Angular.controlle
 AppSpiderValidateApp.controller('PanelController', [Angular.controller.PanelController]);
 AppSpiderValidateApp.controller('ButtonController', ['$scope','$http', Angular.controller.ButtonController]);
 AppSpiderValidateApp.directive('prettifyheader', [Angular.directive.prettifyheader]);
-AppSpiderValidateApp.directive('removeHeader', [Angular.directive.removeHeader]);
 AppSpiderValidateApp.directive('parseRequestHeader', [Angular.directive.parseRequestHeader]);
