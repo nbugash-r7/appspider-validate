@@ -21,7 +21,8 @@
         <div class="navbar-header">
             <button class="navbar-toggle collapsed"></button>
             <a href="#" class="navbar-brand">
-                <img id="appspider-logo" src="img/logo.png" alt="AppSpider Validate Logo">
+                <img id="appspider-logo" src="img/logo.png" alt="AppSpider Validate Logo"
+                     ng-click="panel.toggleNavbar()">
             </a>
         </div>
         <nav class="collapse navbar-collapse">
@@ -33,9 +34,9 @@
         </nav>
     </div>
     <div id="wrapper">
-        <div id="sidebar-wrapper" class="col-sm-2" ng-hide="true">
+        <div id="sidebar-wrapper" class="col-sm-2" ng-style="panel.sidebar">
             <div id="sidebar">
-                <ul class="nav list-group">
+                <ul class="nav list-group sidebar-nav">
                     <li><a href="#" class="list-group-item scroll-to-attack-request">Attack Request</a></li>
                     <li><a href="#" class="list-group-item scroll-to-attack-payload">Payload</a></li>
                     <li><a href="#" class="list-group-item scroll-to-attack-response">Attack Response</a></li>
@@ -43,7 +44,7 @@
                 </ul>
             </div>
         </div>
-        <div id="main-wrapper" class="col-sm-12">
+        <div id="main-wrapper" class="col-sm-10" ng-style="panel.mainbar">
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-sm-12">
