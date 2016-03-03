@@ -1,0 +1,19 @@
+{
+  "name": "appspider-validate",
+  "version": "0.0.1",
+  "description": "Framework for making chrome plugin",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nbugash-r7/appspider-validate.git"
+  },
+  "author": "Nonico Bugash",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nbugash-r7/appspider-validate/issues"
+  },
+  "homepage": "https://github.com/nbugash-r7/appspider-validate#readme"
+}
